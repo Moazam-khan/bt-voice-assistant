@@ -10,6 +10,12 @@ openwakeword>=0.6.0
 
 # --- STT ---
 faster-whisper>=1.0.3
+# GPU inference (ctranslate2 backend) needs these CUDA runtime DLLs on Windows;
+# without them, STT silently falls back to slow CPU inference. See
+# bt_core/stt/transcriber.py's _register_cuda_dll_dirs() for why.
+nvidia-cublas-cu12>=12.9.2.10
+nvidia-cudnn-cu12>=9.24.0.43
+nvidia-nvjitlink-cu12>=12.9.86
 
 # --- LLM client ---
 ollama>=0.3.3
