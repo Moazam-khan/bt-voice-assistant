@@ -1,0 +1,69 @@
+# BT configuration — single source of truth for all tunable values.
+# No component should hardcode a value that belongs here.
+
+app:
+  name: "BT"
+  environment: "dev" # dev | prod
+
+paths:
+  root: "C:/BT"
+  models_dir: "C:/BT/models"
+  logs_dir: "C:/BT/logs"
+  prompts_dir: "C:/BT/config/prompts"
+
+logging:
+  level: "DEBUG" # DEBUG | INFO | WARNING | ERROR
+  format: "pretty" # pretty (dev, console) | json (prod, log aggregation)
+  file: "C:/BT/logs/bt.log"
+
+audio:
+  sample_rate: 16000
+  channels: 1
+  input_device: null # null = system default input device
+  output_device: null # null = system default output device
+  block_size_ms: 30
+
+vad:
+  model: "silero_vad"
+  threshold: 0.5
+  min_speech_ms: 250
+  min_silence_ms: 500
+
+wake_word:
+  phrase: "hey_bt"
+  model_path: "C:/BT/models/wakeword/hey_bt.onnx"
+  threshold: 0.6
+
+stt:
+  model: "distil-large-v3"
+  device: "cuda" # cuda | cpu
+  compute_type: "float16"
+  language: "en"
+
+llm:
+  host: "http://localhost:11434"
+  main_model: "qwen2.5:14b" # tool-calling brain
+  fast_model: "qwen2.5:7b" # quick responses
+  vision_model: "qwen2.5vl:7b"
+  embed_model: "nomic-embed-text"
+  timeout_s: 30
+  temperature: 0.3
+
+tts:
+  engine: "piper"
+  voice_model_path: "C:/BT/models/piper/en_voice.onnx"
+  sample_rate: 22050
+
+memory:
+  chroma_path: "C:/BT/chroma_db"
+  sqlite_path: "C:/BT/bt_memory.sqlite3"
+
+tools:
+  screenshot_dir: "%USERPROFILE%/Desktop"
+  default_permission_tier: "confirm" # safe | confirm | admin
+  timeout_s: 10
+
+latency_targets_ms:
+  wake_word_detection: 400
+  first_spoken_word: 1500
+  simple_command_total: 2000
