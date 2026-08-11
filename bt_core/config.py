@@ -160,6 +160,7 @@ class BTSettings(BaseSettings):
     tts: TtsConfig
     memory: MemoryConfig
     tools: ToolsConfig
+    apps: dict[str, ExpandedPath]
     latency_targets_ms: LatencyTargetsMsConfig
 
     @classmethod

@@ -63,6 +63,16 @@ tools:
   default_permission_tier: "confirm" # safe | confirm | admin
   timeout_s: 10
 
+# Friendly app name -> executable path, used by the open_app tool.
+# Paths are machine-specific (install locations vary) — edit these to
+# match apps installed on this PC.
+apps:
+  chrome: "C:/Program Files/Google/Chrome/Application/chrome.exe"
+  vscode: "%USERPROFILE%/AppData/Local/Programs/Microsoft VS Code/Code.exe"
+  excel: "C:/Program Files/Microsoft Office/root/Office16/EXCEL.EXE"
+  notepad: "notepad.exe"
+  calculator: "calc.exe"
+
 latency_targets_ms:
   wake_word_detection: 400
   first_spoken_word: 1500
