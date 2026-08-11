@@ -1,0 +1,41 @@
+# Virtual environment
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Env / secrets
+.env
+.env.*
+*.key
+
+# Logs
+logs/*.log
+logs/*.jsonl
+
+# Models (large binaries — fetched separately, see README)
+models/*
+!models/.gitkeep
+
+# Runtime data
+*.db
+*.sqlite3
+chroma_db/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+.continue/
+
+# Claude Code local settings
+.claude/settings.local.json

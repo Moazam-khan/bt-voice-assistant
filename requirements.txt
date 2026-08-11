@@ -1,0 +1,39 @@
+# --- Audio I/O ---
+sounddevice>=0.4.6
+numpy>=1.26
+
+# --- VAD ---
+silero-vad>=5.1
+
+# --- Wake word ---
+openwakeword>=0.6.0
+
+# --- STT ---
+faster-whisper>=1.0.3
+
+# --- LLM client ---
+ollama>=0.3.3
+
+# --- Memory ---
+chromadb>=0.5.5
+
+# --- TTS ---
+piper-tts>=1.2.0
+
+# --- Config ---
+pydantic>=2.8
+pydantic-settings>=2.4
+PyYAML>=6.0.2
+
+# --- Logging ---
+structlog>=24.4
+
+# --- Tool execution ---
+pyautogui>=0.9.54
+psutil>=6.0
+requests>=2.32
+
+# --- Dev tooling ---
+ruff>=0.6.0
+pytest>=8.3
+pytest-asyncio>=0.24
