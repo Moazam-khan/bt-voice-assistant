@@ -42,8 +42,8 @@ stt:
 
 llm:
   host: "http://localhost:11434"
-  main_model: "qwen2.5:14b" # tool-calling brain
-  fast_model: "qwen2.5:7b" # quick responses
+  main_model: "qwen2.5:3b" # tool-calling brain; fits fully in 4GB VRAM
+  fast_model: "qwen2.5:1.5b" # quick responses; fits fully in 4GB VRAM
   vision_model: "qwen2.5vl:7b"
   embed_model: "nomic-embed-text"
   timeout_s: 30
