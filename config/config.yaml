@@ -30,8 +30,11 @@ vad:
   min_silence_ms: 500
 
 wake_word:
-  phrase: "hey_bt"
-  model_path: "C:/BT/models/wakeword/hey_bt.onnx"
+  # Using openWakeWord's pretrained "hey_jarvis" model — a real custom "hey
+  # bt" model needs training data/tooling this project doesn't have yet.
+  # See project notes for the plan to swap this for a custom model later.
+  phrase: "hey_jarvis"
+  model_path: "C:/BT/models/wakeword/hey_jarvis_v0.1.onnx"
   threshold: 0.6
 
 stt:

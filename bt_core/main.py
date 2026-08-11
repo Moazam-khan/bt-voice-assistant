@@ -16,6 +16,7 @@ import asyncio
 from bt_core.audio.capture import MicrophoneCapture
 from bt_core.audio.playback import play_audio
 from bt_core.audio.vad import VoiceActivityDetector
+from bt_core.audio.wakeword import WakeWordDetector
 from bt_core.config import get_settings
 from bt_core.llm.client import OllamaClient
 from bt_core.logging_setup import configure_logging, get_logger
@@ -40,6 +41,7 @@ async def run() -> None:
     await asyncio.gather(transcriber.load(), synthesizer.load())
 
     pipeline = Pipeline(
+        wake_word=WakeWordDetector(settings.wake_word),
         vad=VoiceActivityDetector(settings.vad, settings.audio.sample_rate),
         transcriber=transcriber,
         llm_client=OllamaClient(settings.llm),
@@ -49,7 +51,7 @@ async def run() -> None:
         main_model=settings.llm.main_model,
     )
 
-    log.info("bt_ready")
+    log.info("bt_ready", wake_phrase=settings.wake_word.phrase)
     async with MicrophoneCapture(settings.audio) as mic:
         async for chunk in mic.stream():
             reply_audio = await pipeline.handle_chunk(chunk)

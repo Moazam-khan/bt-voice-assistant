@@ -80,6 +80,9 @@ python -c "from faster_whisper import WhisperModel; WhisperModel('distil-small.e
 
 # Piper TTS voice
 python -m piper.download_voices en_US-lessac-medium --download-dir models/piper
+
+# Wake word (pretrained "hey_jarvis" — see config.yaml wake_word section for why)
+python -c "from openwakeword.utils import download_models; download_models(['hey_jarvis'], target_directory='models/wakeword')"
 ```
 
 ## Status

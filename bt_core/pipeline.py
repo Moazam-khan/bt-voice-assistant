@@ -9,9 +9,12 @@ with a fallback spoken response — one bad turn never crashes the loop.
 
 from __future__ import annotations
 
+from enum import Enum
+
 import numpy as np
 
 from bt_core.audio.vad import SpeechEvent, VoiceActivityDetector
+from bt_core.audio.wakeword import WakeWordDetector
 from bt_core.llm.client import ChatMessage, OllamaClient
 from bt_core.logging_setup import get_logger
 from bt_core.stt.transcriber import Transcriber
@@ -26,11 +29,24 @@ _FALLBACK_REPLY = "Sorry, something went wrong on my end."
 _EMPTY_REPLY_FALLBACK = "Done."
 
 
+class _ListenState(Enum):
+    """Whether BT is idle (waiting for its wake word) or actively listening."""
+
+    WAITING_FOR_WAKE_WORD = "waiting_for_wake_word"
+    LISTENING_FOR_COMMAND = "listening_for_command"
+
+
 class Pipeline:
-    """Wires VAD, STT, LLM, tools, and TTS into one conversation loop."""
+    """Wires wake word, VAD, STT, LLM, tools, and TTS into one conversation loop.
+
+    BT stays idle (only running wake word detection) until its wake phrase
+    is heard, then listens for one command via VAD, handles it, and returns
+    to idle — it does not respond to everything it hears.
+    """
 
     def __init__(
         self,
+        wake_word: WakeWordDetector,
         vad: VoiceActivityDetector,
         transcriber: Transcriber,
         llm_client: OllamaClient,
@@ -42,6 +58,7 @@ class Pipeline:
         """Initialize the pipeline with its already-built dependencies.
 
         Args:
+            wake_word: Wake word detector, already loaded from config.
             vad: Voice activity detector, already constructed from config.
             transcriber: STT engine, already loaded via Transcriber.load().
             llm_client: Ollama chat client.
@@ -50,6 +67,7 @@ class Pipeline:
             system_prompt: BT's system prompt text.
             main_model: The LLM model name to use for tool-calling turns.
         """
+        self._wake_word = wake_word
         self._vad = vad
         self._transcriber = transcriber
         self._llm = llm_client
@@ -57,19 +75,27 @@ class Pipeline:
         self._tts = synthesizer
         self._system_prompt = system_prompt
         self._main_model = main_model
+        self._state = _ListenState.WAITING_FOR_WAKE_WORD
         self._recording = False
         self._utterance_buffer: list[np.ndarray] = []
 
     async def handle_chunk(self, chunk: np.ndarray) -> np.ndarray | None:
-        """Feed one audio chunk through VAD; return reply audio if a turn completed.
+        """Feed one audio chunk through the wake word / VAD state machine.
 
         Args:
             chunk: A raw audio chunk from the microphone.
 
         Returns:
-            Synthesized reply audio if this chunk completed an utterance
-            (a full listen -> think -> respond turn), else None.
+            Synthesized reply audio if this chunk completed a full
+            wake-word -> command -> response turn, else None.
         """
+        if self._state == _ListenState.WAITING_FOR_WAKE_WORD:
+            if self._wake_word.process(chunk):
+                self._wake_word.reset()
+                self._vad.reset()
+                self._state = _ListenState.LISTENING_FOR_COMMAND
+            return None
+
         events = self._vad.process(chunk)
         mono = chunk.mean(axis=1) if chunk.ndim > 1 else chunk
 
@@ -81,6 +107,7 @@ class Pipeline:
 
         if SpeechEvent.END in events and self._recording:
             self._recording = False
+            self._state = _ListenState.WAITING_FOR_WAKE_WORD
             audio = np.concatenate(self._utterance_buffer)
             self._utterance_buffer = []
             return await self.handle_utterance(audio)
