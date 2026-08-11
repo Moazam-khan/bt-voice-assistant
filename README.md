@@ -51,6 +51,12 @@ logs/          # structured log output (gitignored)
 models/        # whisper / piper / wakeword weights (gitignored, fetched separately)
 ```
 
+## Development
+
+Coding standards (file size limits, typing, async, logging, tool
+requirements) are enforced via [`CLAUDE.md`](./CLAUDE.md). Read it before
+contributing code.
+
 ## Setup
 
 ```powershell
