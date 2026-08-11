@@ -65,8 +65,22 @@ venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-Requires [Ollama](https://ollama.com) running locally with `qwen2.5:14b`,
-`qwen2.5:7b`, `qwen2.5vl:7b`, and `nomic-embed-text` pulled.
+Requires [Ollama](https://ollama.com) running locally with `qwen2.5:3b`,
+`qwen2.5:1.5b`, `qwen2.5vl:7b`, and `nomic-embed-text` pulled (model sizes
+chosen to fit fully in a 4GB GPU — see config.yaml comments if your GPU
+has more VRAM and you want to use larger models).
+
+### Model weights
+
+`models/` is git-ignored (large binaries) and must be populated per machine:
+
+```powershell
+# Whisper STT — downloads automatically on first run of bt_core.stt, or manually:
+python -c "from faster_whisper import WhisperModel; WhisperModel('distil-small.en', download_root='models/whisper')"
+
+# Piper TTS voice
+python -m piper.download_voices en_US-lessac-medium --download-dir models/piper
+```
 
 ## Status
 

@@ -55,6 +55,13 @@ def configure_logging(config: LoggingConfig) -> None:
         cache_logger_on_first_use=True,
     )
 
+    # Windows' console defaults to the legacy cp1252 codepage, which can't
+    # encode characters some libraries log (e.g. Piper's IPA phonemes like
+    # 'ə'). reconfigure() falls back to '?'-style replacement instead of
+    # crashing the log call.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(
         structlog.stdlib.ProcessorFormatter(

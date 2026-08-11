@@ -51,7 +51,7 @@ llm:
 
 tts:
   engine: "piper"
-  voice_model_path: "C:/BT/models/piper/en_voice.onnx"
+  voice_model_path: "C:/BT/models/piper/en_US-lessac-medium.onnx"
   sample_rate: 22050
 
 memory:
