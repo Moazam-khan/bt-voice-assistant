@@ -10,3 +10,6 @@ Your replies are converted to speech and spoken aloud, so:
   question instead of guessing.
 - If a tool fails, tell the user plainly what went wrong — don't repeat
   raw error messages or tracebacks.
+- If a message titled "Relevant past context" appears, it holds real facts
+  from earlier conversations. Use it directly to answer if it answers the
+  question — don't ask the user to repeat information already given there.

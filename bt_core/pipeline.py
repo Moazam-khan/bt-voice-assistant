@@ -9,6 +9,7 @@ with a fallback spoken response — one bad turn never crashes the loop.
 
 from __future__ import annotations
 
+from datetime import datetime
 from enum import Enum
 
 import numpy as np
@@ -17,6 +18,8 @@ from bt_core.audio.vad import SpeechEvent, VoiceActivityDetector
 from bt_core.audio.wakeword import WakeWordDetector
 from bt_core.llm.client import ChatMessage, OllamaClient
 from bt_core.logging_setup import get_logger
+from bt_core.memory.structured import ConversationStore, ConversationTurn
+from bt_core.memory.vector import SemanticMemory
 from bt_core.stt.transcriber import Transcriber
 from bt_core.tools.base import PermissionTier
 from bt_core.tools.registry import ToolRegistry
@@ -52,6 +55,8 @@ class Pipeline:
         llm_client: OllamaClient,
         tool_registry: ToolRegistry,
         synthesizer: Synthesizer,
+        conversation_store: ConversationStore,
+        semantic_memory: SemanticMemory,
         system_prompt: str,
         main_model: str,
     ) -> None:
@@ -64,6 +69,8 @@ class Pipeline:
             llm_client: Ollama chat client.
             tool_registry: BT's available tools.
             synthesizer: TTS engine, already loaded via Synthesizer.load().
+            conversation_store: SQLite conversation history.
+            semantic_memory: ChromaDB semantic recall.
             system_prompt: BT's system prompt text.
             main_model: The LLM model name to use for tool-calling turns.
         """
@@ -73,6 +80,8 @@ class Pipeline:
         self._llm = llm_client
         self._tools = tool_registry
         self._tts = synthesizer
+        self._conversation = conversation_store
+        self._memory = semantic_memory
         self._system_prompt = system_prompt
         self._main_model = main_model
         self._state = _ListenState.WAITING_FOR_WAKE_WORD
@@ -134,6 +143,14 @@ class Pipeline:
             return np.zeros(0, dtype=np.float32)
 
         reply_text = await self._run_llm_turn(text)
+
+        now = datetime.now()
+        await self._conversation.add_turn(ConversationTurn(role="user", content=text, timestamp=now))
+        await self._conversation.add_turn(
+            ConversationTurn(role="assistant", content=reply_text, timestamp=now)
+        )
+        await self._memory.remember(f"User said: {text}\nBT replied: {reply_text}")
+
         return await self._synthesize_safely(reply_text)
 
     async def _run_llm_turn(self, user_text: str) -> str:
@@ -145,10 +162,16 @@ class Pipeline:
         Returns:
             BT's final text reply, ready to be spoken.
         """
-        messages = [
-            ChatMessage(role="system", content=self._system_prompt),
-            ChatMessage(role="user", content=user_text),
-        ]
+        messages = [ChatMessage(role="system", content=self._system_prompt)]
+
+        matches = await self._memory.recall(user_text, limit=3)
+        if matches:
+            context = "\n".join(f"- {m.text}" for m in matches)
+            messages.append(
+                ChatMessage(role="system", content=f"Relevant past context:\n{context}")
+            )
+
+        messages.append(ChatMessage(role="user", content=user_text))
         try:
             for _ in range(_MAX_TOOL_ROUNDS):
                 result = await self._llm.chat(

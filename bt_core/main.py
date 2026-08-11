@@ -20,6 +20,8 @@ from bt_core.audio.wakeword import WakeWordDetector
 from bt_core.config import get_settings
 from bt_core.llm.client import OllamaClient
 from bt_core.logging_setup import configure_logging, get_logger
+from bt_core.memory.structured import ConversationStore
+from bt_core.memory.vector import SemanticMemory
 from bt_core.pipeline import Pipeline
 from bt_core.stt.transcriber import Transcriber
 from bt_core.tools.registry import build_default_registry
@@ -47,6 +49,10 @@ async def run() -> None:
         llm_client=OllamaClient(settings.llm),
         tool_registry=build_default_registry(settings),
         synthesizer=synthesizer,
+        conversation_store=ConversationStore(settings.memory.sqlite_path),
+        semantic_memory=SemanticMemory(
+            settings.memory.chroma_path, settings.llm.embed_model, settings.llm.host
+        ),
         system_prompt=system_prompt,
         main_model=settings.llm.main_model,
     )
