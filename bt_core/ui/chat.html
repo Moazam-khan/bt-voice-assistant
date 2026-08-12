@@ -77,6 +77,25 @@
   #messages::-webkit-scrollbar { width: 8px; }
   #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
   #empty-state { margin: auto; text-align: center; color: var(--muted); font-size: 13px; padding: 0 24px; }
+  footer {
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--panel);
+  }
+  #start-btn {
+    width: 100%;
+    padding: 11px;
+    border-radius: 10px;
+    border: none;
+    background: var(--accent);
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s ease, background 0.15s ease;
+  }
+  #start-btn:hover:not(:disabled) { background: #1d4ed8; }
+  #start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -86,8 +105,11 @@
     <span id="status-label">Idle</span>
   </header>
   <div id="messages">
-    <div id="empty-state">Say &quot;Hey Jarvis&quot; to start talking to BT.</div>
+    <div id="empty-state">Say &quot;Hey Jarvis&quot;, or click Start below, to talk to BT.</div>
   </div>
+  <footer>
+    <button id="start-btn" disabled onclick="startListening()">Connecting&hellip;</button>
+  </footer>
 
   <script>
     function clearEmptyState() {
@@ -126,6 +148,12 @@
       dot.className = 'status-dot ' + status;
       const labels = { idle: 'Idle', listening: 'Listening', thinking: 'Thinking', speaking: 'Speaking' };
       label.textContent = labels[status] || status;
+
+      const btn = document.getElementById('start-btn');
+      if (bridgeReady) {
+        btn.disabled = status !== 'idle';
+      }
+      btn.textContent = status === 'idle' ? 'Start' : labels[status] || status;
     }
 
     function escapeHtml(text) {
@@ -133,6 +161,19 @@
       div.textContent = text;
       return div.innerHTML;
     }
+
+    let bridgeReady = false;
+
+    function startListening() {
+      if (bridgeReady) {
+        window.pywebview.api.start_listening();
+      }
+    }
+
+    window.addEventListener('pywebviewready', function () {
+      bridgeReady = true;
+      setStatus('idle');
+    });
   </script>
 </body>
 </html>

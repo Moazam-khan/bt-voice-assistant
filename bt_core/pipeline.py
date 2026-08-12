@@ -103,6 +103,17 @@ class Pipeline:
         self._recording = False
         self._utterance_buffer: list[np.ndarray] = []
 
+    def trigger_listening(self) -> None:
+        """Manually start listening for a command, bypassing the wake word.
+
+        For UI-driven activation (e.g. a "Start" button) instead of
+        saying the wake phrase. No-op if already listening for a command.
+        """
+        if self._state == _ListenState.WAITING_FOR_WAKE_WORD:
+            self._vad.reset()
+            self._state = _ListenState.LISTENING_FOR_COMMAND
+            self._on_status_change("listening")
+
     async def handle_chunk(self, chunk: np.ndarray) -> np.ndarray | None:
         """Feed one audio chunk through the wake word / VAD state machine.
 

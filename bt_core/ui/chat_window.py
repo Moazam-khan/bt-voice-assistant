@@ -23,15 +23,49 @@ log = get_logger(__name__)
 _HTML_PATH = Path(__file__).resolve().parent / "chat.html"
 
 
+class _ChatApi:
+    """Exposed to JS as ``window.pywebview.api`` — one method per UI action.
+
+    A separate object (rather than methods directly on ChatWindow) because
+    pywebview publishes every public method of the js_api object to JS
+    automatically; keeping it minimal avoids accidentally exposing
+    ChatWindow's other methods (show_user_message, etc.) to the page.
+    """
+
+    def __init__(self, chat_window: ChatWindow) -> None:
+        self._chat_window = chat_window
+
+    def start_listening(self) -> None:
+        """Called from JS when the user clicks the "Start" button."""
+        self._chat_window._on_start_listening()
+
+
 class ChatWindow:
     """Wraps a pywebview window showing BT's conversation transcript."""
 
     def __init__(self) -> None:
         """Create the window (not shown until :meth:`start` is called)."""
+        self._on_start_listening: Callable[[], None] = lambda: None
         html = _HTML_PATH.read_text(encoding="utf-8")
         self._window = webview.create_window(
-            "BT", html=html, width=420, height=640, background_color="#0f1115"
+            "BT",
+            html=html,
+            width=420,
+            height=640,
+            background_color="#0f1115",
+            js_api=_ChatApi(self),
         )
+
+    def set_start_listening_handler(self, handler: Callable[[], None]) -> None:
+        """Set the callback invoked when the user clicks the "Start" button.
+
+        Args:
+            handler: Called with no arguments, on pywebview's own calling
+                thread — if it needs to reach the asyncio pipeline (on a
+                different thread), it must schedule that itself (e.g. via
+                ``loop.call_soon_threadsafe``).
+        """
+        self._on_start_listening = handler
 
     def start(self, on_ready: Callable[[], None]) -> None:
         """Show the window and block the calling thread until it's closed.

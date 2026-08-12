@@ -93,6 +93,9 @@ async def _async_main(chat_window: ChatWindow) -> None:
     quit_event = asyncio.Event()
     tray = TrayIcon(on_quit=lambda: loop.call_soon_threadsafe(quit_event.set))
     tray.start()
+    chat_window.set_start_listening_handler(
+        lambda: loop.call_soon_threadsafe(pipeline.trigger_listening)
+    )
 
     chat_window.set_status("idle")
     log.info("bt_ready", wake_phrase=settings.wake_word.phrase)
