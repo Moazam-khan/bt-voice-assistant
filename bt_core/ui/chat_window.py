@@ -39,6 +39,10 @@ class _ChatApi:
         """Called from JS when the user clicks the "Start" button."""
         self._chat_window._on_start_listening()
 
+    def send_text_message(self, text: str) -> None:
+        """Called from JS when the user submits the text input box."""
+        self._chat_window._on_text_message(text)
+
 
 class ChatWindow:
     """Wraps a pywebview window showing BT's conversation transcript."""
@@ -46,6 +50,7 @@ class ChatWindow:
     def __init__(self) -> None:
         """Create the window (not shown until :meth:`start` is called)."""
         self._on_start_listening: Callable[[], None] = lambda: None
+        self._on_text_message: Callable[[str], None] = lambda text: None
         html = _HTML_PATH.read_text(encoding="utf-8")
         self._window = webview.create_window(
             "BT",
@@ -66,6 +71,16 @@ class ChatWindow:
                 ``loop.call_soon_threadsafe``).
         """
         self._on_start_listening = handler
+
+    def set_text_message_handler(self, handler: Callable[[str], None]) -> None:
+        """Set the callback invoked when the user submits typed text.
+
+        Args:
+            handler: Called with the typed message, on pywebview's own
+                calling thread — if it needs to reach the asyncio pipeline
+                (on a different thread), it must schedule that itself.
+        """
+        self._on_text_message = handler
 
     def start(self, on_ready: Callable[[], None]) -> None:
         """Show the window and block the calling thread until it's closed.

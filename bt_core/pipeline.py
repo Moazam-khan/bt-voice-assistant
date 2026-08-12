@@ -171,6 +171,27 @@ class Pipeline:
             self._on_status_change("idle")
             return np.zeros(0, dtype=np.float32)
 
+        return await self._handle_text(text)
+
+    async def handle_text(self, text: str) -> np.ndarray:
+        """Run one full turn from typed text instead of spoken audio.
+
+        For a UI text box as an alternative input to voice — goes through
+        the identical LLM/tools/memory/TTS path handle_utterance uses
+        after transcription, so typing and speaking behave identically.
+
+        Args:
+            text: The user's typed message.
+
+        Returns:
+            Synthesized speech for BT's reply, played back the same way a
+            spoken command's reply would be.
+        """
+        self._on_status_change("thinking")
+        return await self._handle_text(text)
+
+    async def _handle_text(self, text: str) -> np.ndarray:
+        """Shared LLM/tools/memory/TTS logic for both voice and typed input."""
         self._on_user_text(text)
         reply_text = await self._run_llm_turn(text)
         self._on_assistant_text(reply_text)

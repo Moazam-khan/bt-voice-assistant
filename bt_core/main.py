@@ -54,6 +54,19 @@ async def _listen_loop(pipeline: Pipeline, settings: BTSettings, quit_event: asy
                 await play_audio(reply_audio, settings.tts.sample_rate)
 
 
+async def _handle_text_and_play(pipeline: Pipeline, settings: BTSettings, text: str) -> None:
+    """Run one text-chat turn and play back BT's spoken reply.
+
+    Args:
+        pipeline: The built conversation pipeline.
+        settings: BT's full settings.
+        text: The user's typed message.
+    """
+    reply_audio = await pipeline.handle_text(text)
+    if reply_audio is not None and len(reply_audio) > 0:
+        await play_audio(reply_audio, settings.tts.sample_rate)
+
+
 async def _async_main(chat_window: ChatWindow) -> None:
     """Build BT's async components and run the continuous listen-respond loop.
 
@@ -96,6 +109,11 @@ async def _async_main(chat_window: ChatWindow) -> None:
     chat_window.set_start_listening_handler(
         lambda: loop.call_soon_threadsafe(pipeline.trigger_listening)
     )
+    chat_window.set_text_message_handler(
+        lambda text: asyncio.run_coroutine_threadsafe(
+            _handle_text_and_play(pipeline, settings, text), loop
+        )
+    )
 
     chat_window.set_status("idle")
     log.info("bt_ready", wake_phrase=settings.wake_word.phrase)
@@ -107,9 +125,13 @@ async def _async_main(chat_window: ChatWindow) -> None:
         log.error("bt_listen_loop_crashed", exc_info=listen_task.exception())
         chat_window.set_status("idle")
         chat_window.show_bt_message(
-            "I've stopped working — something went wrong with my microphone. "
-            "Check the logs, fix the issue, then restart me."
+            "I can't hear you right now — something's wrong with my microphone. "
+            "You can still type to me below while that gets fixed."
         )
+        # Voice is down, but text chat still works — stay alive until Quit
+        # instead of shutting the whole backend down over a mic failure.
+        if not quit_task.done():
+            await quit_task
     else:
         listen_task.cancel()
 

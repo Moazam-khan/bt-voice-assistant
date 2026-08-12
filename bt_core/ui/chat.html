@@ -78,13 +78,29 @@
   #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
   #empty-state { margin: auto; text-align: center; color: var(--muted); font-size: 13px; padding: 0 24px; }
   footer {
-    padding: 14px 18px;
+    padding: 12px 18px 14px;
     border-top: 1px solid var(--border);
     background: var(--panel);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
-  #start-btn {
-    width: 100%;
-    padding: 11px;
+  #text-form { display: flex; gap: 8px; }
+  #text-input {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+  }
+  #text-input:focus { border-color: var(--accent); }
+  #text-input:disabled { opacity: 0.5; }
+  #send-btn, #start-btn {
+    padding: 10px 16px;
     border-radius: 10px;
     border: none;
     background: var(--accent);
@@ -94,8 +110,10 @@
     cursor: pointer;
     transition: opacity 0.15s ease, background 0.15s ease;
   }
-  #start-btn:hover:not(:disabled) { background: #1d4ed8; }
-  #start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  #start-btn { width: 100%; background: var(--bt-bubble); border: 1px solid var(--border); }
+  #send-btn:hover:not(:disabled), #start-btn:hover:not(:disabled) { background: #1d4ed8; }
+  #start-btn:hover:not(:disabled) { background: #2a3040; }
+  #send-btn:disabled, #start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -105,10 +123,14 @@
     <span id="status-label">Idle</span>
   </header>
   <div id="messages">
-    <div id="empty-state">Say &quot;Hey Jarvis&quot;, or click Start below, to talk to BT.</div>
+    <div id="empty-state">Type a message, or say &quot;Hey Jarvis&quot;, to talk to BT.</div>
   </div>
   <footer>
-    <button id="start-btn" disabled onclick="startListening()">Connecting&hellip;</button>
+    <form id="text-form" onsubmit="return sendText(event)">
+      <input type="text" id="text-input" placeholder="Connecting&hellip;" disabled autocomplete="off" />
+      <button type="submit" id="send-btn" disabled>Send</button>
+    </form>
+    <button id="start-btn" disabled onclick="startListening()">Start listening</button>
   </footer>
 
   <script>
@@ -149,11 +171,17 @@
       const labels = { idle: 'Idle', listening: 'Listening', thinking: 'Thinking', speaking: 'Speaking' };
       label.textContent = labels[status] || status;
 
-      const btn = document.getElementById('start-btn');
+      const idle = status === 'idle';
+      const startBtn = document.getElementById('start-btn');
+      const textInput = document.getElementById('text-input');
+      const sendBtn = document.getElementById('send-btn');
       if (bridgeReady) {
-        btn.disabled = status !== 'idle';
+        startBtn.disabled = !idle;
+        textInput.disabled = !idle;
+        sendBtn.disabled = !idle;
+        textInput.placeholder = idle ? 'Type a message...' : (labels[status] || status) + '…';
       }
-      btn.textContent = status === 'idle' ? 'Start' : labels[status] || status;
+      startBtn.textContent = idle ? 'Start listening' : labels[status] || status;
     }
 
     function escapeHtml(text) {
@@ -168,6 +196,18 @@
       if (bridgeReady) {
         window.pywebview.api.start_listening();
       }
+    }
+
+    function sendText(event) {
+      event.preventDefault();
+      const input = document.getElementById('text-input');
+      const text = input.value.trim();
+      if (!text || !bridgeReady) {
+        return false;
+      }
+      input.value = '';
+      window.pywebview.api.send_text_message(text);
+      return false;
     }
 
     window.addEventListener('pywebviewready', function () {
