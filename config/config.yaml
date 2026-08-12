@@ -6,15 +6,15 @@ app:
   environment: "dev" # dev | prod
 
 paths:
-  root: "C:/BT"
-  models_dir: "C:/BT/models"
-  logs_dir: "C:/BT/logs"
-  prompts_dir: "C:/BT/config/prompts"
+  root: "."
+  models_dir: "models"
+  logs_dir: "logs"
+  prompts_dir: "config/prompts"
 
 logging:
   level: "DEBUG" # DEBUG | INFO | WARNING | ERROR
   format: "pretty" # pretty (dev, console) | json (prod, log aggregation)
-  file: "C:/BT/logs/bt.log"
+  file: "logs/bt.log"
 
 audio:
   sample_rate: 16000
@@ -34,7 +34,7 @@ wake_word:
   # bt" model needs training data/tooling this project doesn't have yet.
   # See project notes for the plan to swap this for a custom model later.
   phrase: "hey_jarvis"
-  model_path: "C:/BT/models/wakeword/hey_jarvis_v0.1.onnx"
+  model_path: "models/wakeword/hey_jarvis_v0.1.onnx"
   threshold: 0.6
 
 stt:
@@ -54,12 +54,12 @@ llm:
 
 tts:
   engine: "piper"
-  voice_model_path: "C:/BT/models/piper/en_US-lessac-medium.onnx"
+  voice_model_path: "models/piper/en_US-lessac-medium.onnx"
   sample_rate: 22050
 
 memory:
-  chroma_path: "C:/BT/chroma_db"
-  sqlite_path: "C:/BT/bt_memory.sqlite3"
+  chroma_path: "chroma_db"
+  sqlite_path: "bt_memory.sqlite3"
 
 tools:
   screenshot_dir: "%USERPROFILE%/Desktop"

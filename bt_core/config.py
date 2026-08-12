@@ -8,6 +8,7 @@ should read the YAML file directly or hardcode a tunable value.
 from __future__ import annotations
 
 import os
+import sys
 from functools import lru_cache
 from pathlib import Path
 from typing import Annotated, Literal
@@ -17,16 +18,36 @@ from pydantic import BaseModel, BeforeValidator, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def _project_root() -> Path:
+    """Find BT's root directory: where config/ and models/ live.
+
+    When run from source, that's two levels up from this file
+    (bt_core/config.py -> project root). When packaged by PyInstaller
+    (sys.frozen is set), __file__ points inside a temp extraction dir
+    instead, so config/models must live next to the .exe and are found
+    via sys.executable's directory instead.
+    """
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent.parent
+
+
 def _expand_path(value: str | Path) -> Path:
-    """Expand env vars (e.g. ``%USERPROFILE%``) and ``~`` in a path value.
+    """Expand env vars/``~`` in a path, and resolve relative paths against
+    BT's root directory so config.yaml doesn't need machine-specific
+    absolute paths (making the app relocatable, e.g. once packaged).
 
     Args:
-        value: A raw path, possibly containing unexpanded env vars.
+        value: A raw path, possibly containing unexpanded env vars, and
+            possibly relative (e.g. "models/whisper").
 
     Returns:
-        The fully expanded, resolved-user ``Path``.
+        The fully expanded, absolute ``Path``.
     """
-    return Path(os.path.expandvars(str(value))).expanduser()
+    expanded = Path(os.path.expandvars(str(value))).expanduser()
+    if not expanded.is_absolute():
+        expanded = _project_root() / expanded
+    return expanded
 
 
 ExpandedPath = Annotated[Path, BeforeValidator(_expand_path)]
@@ -182,7 +203,7 @@ class BTSettings(BaseSettings):
         return cls(**raw)
 
 
-_DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent.parent / "config" / "config.yaml"
+_DEFAULT_CONFIG_PATH = _project_root() / "config" / "config.yaml"
 
 
 @lru_cache(maxsize=1)
