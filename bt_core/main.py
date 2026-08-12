@@ -85,7 +85,11 @@ async def run() -> None:
     quit_task = asyncio.create_task(quit_event.wait())
     await asyncio.wait([listen_task, quit_task], return_when=asyncio.FIRST_COMPLETED)
 
-    listen_task.cancel()
+    if listen_task.done() and not listen_task.cancelled() and listen_task.exception() is not None:
+        log.error("bt_listen_loop_crashed", exc_info=listen_task.exception())
+    else:
+        listen_task.cancel()
+
     tray.stop()
     log.info("bt_shutting_down")
 
