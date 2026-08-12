@@ -9,6 +9,7 @@ with a fallback spoken response — one bad turn never crashes the loop.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
 
@@ -59,6 +60,9 @@ class Pipeline:
         semantic_memory: SemanticMemory,
         system_prompt: str,
         main_model: str,
+        on_status_change: Callable[[str], None] | None = None,
+        on_user_text: Callable[[str], None] | None = None,
+        on_assistant_text: Callable[[str], None] | None = None,
     ) -> None:
         """Initialize the pipeline with its already-built dependencies.
 
@@ -73,6 +77,14 @@ class Pipeline:
             semantic_memory: ChromaDB semantic recall.
             system_prompt: BT's system prompt text.
             main_model: The LLM model name to use for tool-calling turns.
+            on_status_change: Optional UI hook, called with one of "idle",
+                "listening", "thinking", "speaking" as the pipeline's state
+                changes. The pipeline has no awareness of what (if
+                anything) is listening — e.g. a chat window.
+            on_user_text: Optional UI hook, called with the transcribed
+                user utterance once STT completes.
+            on_assistant_text: Optional UI hook, called with BT's final
+                text reply once the LLM/tool loop completes.
         """
         self._wake_word = wake_word
         self._vad = vad
@@ -84,6 +96,9 @@ class Pipeline:
         self._memory = semantic_memory
         self._system_prompt = system_prompt
         self._main_model = main_model
+        self._on_status_change = on_status_change or (lambda status: None)
+        self._on_user_text = on_user_text or (lambda text: None)
+        self._on_assistant_text = on_assistant_text or (lambda text: None)
         self._state = _ListenState.WAITING_FOR_WAKE_WORD
         self._recording = False
         self._utterance_buffer: list[np.ndarray] = []
@@ -103,6 +118,7 @@ class Pipeline:
                 self._wake_word.reset()
                 self._vad.reset()
                 self._state = _ListenState.LISTENING_FOR_COMMAND
+                self._on_status_change("listening")
             return None
 
         events = self._vad.process(chunk)
@@ -132,6 +148,7 @@ class Pipeline:
             Synthesized speech for BT's reply. Falls back to a spoken
             apology if any stage fails, rather than raising.
         """
+        self._on_status_change("thinking")
         try:
             text = await self._transcriber.transcribe(audio)
         except Exception:
@@ -140,9 +157,12 @@ class Pipeline:
 
         if not text:
             log.info("pipeline_empty_transcription")
+            self._on_status_change("idle")
             return np.zeros(0, dtype=np.float32)
 
+        self._on_user_text(text)
         reply_text = await self._run_llm_turn(text)
+        self._on_assistant_text(reply_text)
 
         now = datetime.now()
         await self._conversation.add_turn(ConversationTurn(role="user", content=text, timestamp=now))
@@ -151,7 +171,10 @@ class Pipeline:
         )
         await self._memory.remember(f"User said: {text}\nBT replied: {reply_text}")
 
-        return await self._synthesize_safely(reply_text)
+        self._on_status_change("speaking")
+        result = await self._synthesize_safely(reply_text)
+        self._on_status_change("idle")
+        return result
 
     async def _run_llm_turn(self, user_text: str) -> str:
         """Run the LLM + tool-calling loop for one user utterance.
