@@ -23,6 +23,10 @@ logs/*.jsonl
 models/*
 !models/.gitkeep
 
+# PyInstaller build output (regenerate with: pyinstaller bt.spec --noconfirm)
+build/
+dist/
+
 # Runtime data
 *.db
 *.sqlite3

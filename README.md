@@ -85,11 +85,35 @@ python -m piper.download_voices en_US-lessac-medium --download-dir models/piper
 python -c "from openwakeword.utils import download_models; download_models(['hey_jarvis'], target_directory='models/wakeword')"
 ```
 
+## Building the standalone .exe
+
+```powershell
+pyinstaller bt.spec --noconfirm
+```
+
+Produces `dist/BT/BT.exe` plus a `_internal/` folder of bundled
+dependencies. `config/`, `models/`, and `logs/` are **not** bundled into
+the exe — copy them alongside it so they stay editable without a rebuild:
+
+```powershell
+Copy-Item -Recurse config dist/BT/config
+Copy-Item -Recurse models dist/BT/models
+New-Item -ItemType Directory -Force dist/BT/logs
+```
+
+Then run `dist\BT\BT.exe` — no Python or venv needed on the machine
+running it. See `bt.spec`'s header comment for why `--collect-data
+silero_vad` and `--collect-all chromadb` are required (both load
+resources dynamically in ways PyInstaller can't detect on its own,
+which otherwise crashes the packaged app silently on a background
+thread).
+
 ## Status
 
 Under active development — see commit history for phase progress
 (config/logging → audio → STT → LLM tool-calling → tools → TTS →
-full pipeline → wake word → memory → tray/auto-start → ERP → packaging).
+full pipeline → wake word → memory → tray/auto-start → chat window UI →
+packaging as .exe). ERP integration is deferred, not built.
 
 ## License
 

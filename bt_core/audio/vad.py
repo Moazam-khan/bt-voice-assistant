@@ -4,6 +4,14 @@ Silero's model requires exactly 512 samples per call at 16kHz (32ms).
 Audio capture's block size is independently configurable, so this module
 buffers incoming chunks internally and only invokes the model once enough
 samples have accumulated — callers can feed chunks of any size.
+
+Loads the ONNX build of the model (onnx=True), not the default
+TorchScript/.jit build: the .jit variant hung indefinitely on first load
+inside a PyInstaller-packaged build (a known category of issue with
+torch.jit.load() needing things a frozen bundle doesn't have), while the
+onnxruntime-based path — already proven working here via the wake word
+model — loads reliably either way. VADIterator supports both formats
+interchangeably.
 """
 
 from __future__ import annotations
@@ -54,7 +62,7 @@ class VoiceActivityDetector:
                 f"VoiceActivityDetector requires {_SILERO_SAMPLE_RATE}Hz audio, "
                 f"got {sample_rate}Hz"
             )
-        self._model = load_silero_vad()
+        self._model = load_silero_vad(onnx=True)
         self._iterator = VADIterator(
             self._model,
             threshold=config.threshold,
