@@ -35,8 +35,9 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 18px;
-    background: var(--sidebar);
+    background: linear-gradient(180deg, #1a1d26, var(--sidebar));
     border-bottom: 1px solid var(--border);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
     font-size: 12px;
   }
   .app-header .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; letter-spacing: 0.03em; }
@@ -70,7 +71,7 @@
   .sidebar {
     width: 220px;
     flex-shrink: 0;
-    background: var(--sidebar);
+    background: linear-gradient(180deg, var(--sidebar), #0e1015);
     border-right: 1px solid var(--border);
     padding: 16px;
     display: flex;
@@ -80,10 +81,11 @@
   .sidebar-header { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; letter-spacing: 0.03em; }
   .sidebar-header .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
   .card {
-    background: var(--panel);
+    background: linear-gradient(160deg, #1b1f29, var(--panel));
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 14px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
   }
   .card-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
   .stat-row { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; font-size: 12px; }
@@ -120,9 +122,69 @@
     width: 480px;
     height: 480px;
     transform: translate(-50%, -50%);
-    background: radial-gradient(circle, rgba(37, 99, 235, 0.10), transparent 65%);
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.12), transparent 65%);
     pointer-events: none;
   }
+  .center-panel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 45%, transparent 42%, rgba(0, 0, 0, 0.5) 100%);
+    pointer-events: none;
+  }
+  .center-backdrop {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .stars {
+    position: absolute;
+    inset: -50%;
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, rgba(255, 255, 255, 0.55), transparent),
+      radial-gradient(1px 1px at 30% 70%, rgba(255, 255, 255, 0.35), transparent),
+      radial-gradient(1.5px 1.5px at 50% 40%, rgba(255, 255, 255, 0.45), transparent),
+      radial-gradient(1px 1px at 70% 15%, rgba(255, 255, 255, 0.3), transparent),
+      radial-gradient(1px 1px at 85% 60%, rgba(255, 255, 255, 0.4), transparent),
+      radial-gradient(1.5px 1.5px at 20% 85%, rgba(255, 255, 255, 0.3), transparent),
+      radial-gradient(1px 1px at 60% 90%, rgba(255, 255, 255, 0.35), transparent),
+      radial-gradient(1px 1px at 92% 35%, rgba(255, 255, 255, 0.4), transparent);
+    background-repeat: repeat;
+    background-size: 340px 340px;
+    animation: stars-drift 140s linear infinite;
+    opacity: 0.55;
+  }
+  @keyframes stars-drift {
+    from { transform: translate(0, 0); }
+    to { transform: translate(-340px, -170px); }
+  }
+  .grid-floor {
+    position: absolute;
+    left: 50%;
+    bottom: -12%;
+    width: 160%;
+    height: 55%;
+    transform: translateX(-50%) perspective(300px) rotateX(60deg);
+    background-image:
+      repeating-linear-gradient(to right, rgba(96, 165, 250, 0.12) 0, rgba(96, 165, 250, 0.12) 1px, transparent 1px, transparent 48px),
+      repeating-linear-gradient(to bottom, rgba(96, 165, 250, 0.12) 0, rgba(96, 165, 250, 0.12) 1px, transparent 1px, transparent 48px);
+    -webkit-mask-image: linear-gradient(to top, black, transparent);
+    mask-image: linear-gradient(to top, black, transparent);
+    opacity: 0.5;
+  }
+  .hud-corner {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border: 2px solid rgba(96, 165, 250, 0.35);
+    opacity: 0.75;
+    pointer-events: none;
+  }
+  .hud-corner.tl { top: 10px; left: 10px; border-right: none; border-bottom: none; border-top-left-radius: 6px; }
+  .hud-corner.tr { top: 10px; right: 10px; border-left: none; border-bottom: none; border-top-right-radius: 6px; }
+  .hud-corner.bl { bottom: 10px; left: 10px; border-right: none; border-top: none; border-bottom-left-radius: 6px; }
+  .hud-corner.br { bottom: 10px; right: 10px; border-left: none; border-top: none; border-bottom-right-radius: 6px; }
   .connection-badge {
     position: absolute;
     top: 18px;
@@ -171,6 +233,16 @@
     border-radius: 50%;
     border: 1px solid rgba(37, 99, 235, 0.15);
     animation: ring-spin 26s linear infinite reverse;
+  }
+  .orb-sweep {
+    position: absolute;
+    inset: -14px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(96, 165, 250, 0.6) 6deg, transparent 45deg);
+    -webkit-mask-image: radial-gradient(closest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+    mask-image: radial-gradient(closest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+    animation: ring-spin 4s linear infinite;
+    opacity: 0.85;
   }
   @keyframes ring-spin {
     from { transform: rotate(0deg); }
@@ -476,11 +548,20 @@
     </aside>
 
     <main class="center-panel">
+      <div class="center-backdrop">
+        <div class="stars"></div>
+        <div class="grid-floor"></div>
+      </div>
+      <div class="hud-corner tl"></div>
+      <div class="hud-corner tr"></div>
+      <div class="hud-corner bl"></div>
+      <div class="hud-corner br"></div>
       <div class="connection-badge" id="connection-badge">
         <div class="conn-dot"></div>
         <span id="connection-label">Connecting&hellip;</span>
       </div>
       <div class="orb-wrap">
+        <div class="orb-sweep"></div>
         <div class="orb-ring-outer"></div>
         <div class="orb-ring"></div>
         <div class="orb" id="status-dot">
