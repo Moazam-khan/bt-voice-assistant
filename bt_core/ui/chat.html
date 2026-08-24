@@ -31,6 +31,7 @@
   .app-header {
     height: 46px;
     flex-shrink: 0;
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -39,6 +40,16 @@
     border-bottom: 1px solid var(--border);
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
     font-size: 12px;
+  }
+  .app-header::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.45), transparent);
+    pointer-events: none;
   }
   .app-header .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; letter-spacing: 0.03em; }
   .header-clock { color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -90,7 +101,7 @@
     pointer-events: none;
   }
   .sidebar-header { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; letter-spacing: 0.03em; }
-  .sidebar-header .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); flex-shrink: 0; }
   .card {
     background: linear-gradient(160deg, #1b1f29, var(--panel));
     border: 1px solid var(--border);
@@ -98,6 +109,13 @@
     padding: 14px;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 -1px 0 rgba(0, 0, 0, 0.3),
       0 6px 14px rgba(0, 0, 0, 0.28);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(96, 165, 250, 0.35);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+      0 10px 22px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(96, 165, 250, 0.08);
   }
   .card-title {
     font-size: 11px;
@@ -458,6 +476,7 @@
     align-items: center;
     justify-content: space-between;
   }
+  .chat-header-title { display: flex; align-items: center; gap: 8px; }
   #clear-btn {
     background: none;
     border: 1px solid var(--border);
@@ -491,31 +510,40 @@
     white-space: pre-wrap;
     word-wrap: break-word;
     animation: msg-in 0.18s ease-out;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
   }
   .msg.user {
     align-self: flex-end;
-    background: var(--user-bubble);
+    background: linear-gradient(160deg, #3b74f6, var(--user-bubble));
     color: white;
     border-bottom-right-radius: 4px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 4px 12px rgba(37, 99, 235, 0.25);
   }
   .msg.bt {
     align-self: flex-start;
-    background: var(--bt-bubble);
+    background: linear-gradient(160deg, #232838, var(--bt-bubble));
     border: 1px solid var(--border);
     border-bottom-left-radius: 4px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 4px 10px rgba(0, 0, 0, 0.25);
   }
   .msg.error {
     align-self: flex-start;
-    background: var(--error-bg);
+    background: linear-gradient(160deg, #33231c, var(--error-bg));
     border: 1px solid var(--error-border);
     border-left: 3px solid var(--error-border);
     border-bottom-left-radius: 4px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
   }
   .msg .role { font-size: 10px; color: var(--muted); margin-bottom: 3px; font-weight: 600; }
   .msg .timestamp { font-size: 10px; color: var(--muted); margin-top: 4px; opacity: 0.7; }
   .msg.user .timestamp { text-align: right; }
-  #messages::-webkit-scrollbar { width: 8px; }
-  #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  #messages::-webkit-scrollbar { width: 6px; }
+  #messages::-webkit-scrollbar-track { background: transparent; }
+  #messages::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(96, 165, 250, 0.45), rgba(96, 165, 250, 0.15));
+    border-radius: 999px;
+  }
+  #messages::-webkit-scrollbar-thumb:hover { background: rgba(96, 165, 250, 0.65); }
   #empty-state { margin: auto; text-align: center; color: var(--muted); font-size: 12px; padding: 0 24px; }
   .typing-dots {
     align-self: flex-start;
@@ -532,7 +560,8 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--muted);
+    background: var(--accent);
+    box-shadow: 0 0 4px rgba(37, 99, 235, 0.6);
     animation: typing-bounce 1.2s infinite ease-in-out;
   }
   .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
@@ -732,7 +761,7 @@
 
     <section class="chat-panel">
       <div class="chat-header">
-        <span>Conversation</span>
+        <span class="chat-header-title"><span class="logo-dot"></span>Conversation</span>
         <button id="clear-btn" onclick="clearConversation()">Clear</button>
       </div>
       <div id="messages">
