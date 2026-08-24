@@ -45,16 +45,21 @@
   .header-weather { display: flex; align-items: center; gap: 6px; color: var(--muted); }
   .header-weather .header-weather-temp { color: var(--text); font-weight: 600; }
   .gear-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: none;
-    border: none;
+    border: 1px solid transparent;
     color: var(--muted);
     cursor: pointer;
-    font-size: 15px;
-    padding: 4px 6px;
-    border-radius: 6px;
-    transition: background 0.15s ease, color 0.15s ease;
+    padding: 0;
+    border-radius: 50%;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   }
-  .gear-btn:hover { background: rgba(255, 255, 255, 0.06); color: var(--text); }
+  .gear-btn svg { width: 15px; height: 15px; }
+  .gear-btn:hover { background: rgba(255, 255, 255, 0.06); color: var(--text); border-color: var(--border); }
   .app-shell {
     display: flex;
     flex: 1;
@@ -327,17 +332,14 @@
     30% { transform: translateY(-4px); opacity: 1; }
   }
   footer {
-    padding: 12px 18px 14px;
+    padding: 14px 16px;
     border-top: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
   }
-  #text-form { display: flex; gap: 8px; }
+  #text-form { display: flex; align-items: center; gap: 8px; }
   #text-input {
     flex: 1;
-    padding: 10px 12px;
-    border-radius: 10px;
+    padding: 10px 14px;
+    border-radius: 999px;
     border: 1px solid var(--border);
     background: var(--bg);
     color: var(--text);
@@ -347,21 +349,54 @@
   }
   #text-input:focus { border-color: var(--accent); }
   #text-input:disabled { opacity: 0.5; }
-  #send-btn, #start-btn {
-    padding: 10px 16px;
-    border-radius: 10px;
-    border: none;
-    background: var(--accent);
-    color: white;
-    font-size: 13px;
-    font-weight: 600;
+
+  .icon-btn {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bt-bubble);
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    transition: opacity 0.15s ease, background 0.15s ease;
+    padding: 0;
+    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.2s ease, transform 0.2s ease;
   }
-  #start-btn { width: 100%; background: var(--bt-bubble); border: 1px solid var(--border); }
-  #send-btn:hover:not(:disabled), #start-btn:hover:not(:disabled) { background: #1d4ed8; }
-  #start-btn:hover:not(:disabled) { background: #2a3040; }
-  #send-btn:disabled, #start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .icon-btn svg { width: 17px; height: 17px; }
+  .icon-btn:hover:not(:disabled) { background: #2a3040; color: var(--text); }
+  .icon-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  #send-btn { background: var(--accent); border-color: var(--accent); color: white; }
+  #send-btn:hover:not(:disabled) { background: #1d4ed8; }
+
+  #mic-btn.listening {
+    background: radial-gradient(circle, #16a34a, #15803d);
+    border-color: #22c55e;
+    color: white;
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+    animation: mic-pulse 1.4s infinite ease-in-out;
+  }
+  #mic-btn.thinking {
+    background: radial-gradient(circle, #ca8a04, #a16207);
+    border-color: #eab308;
+    color: white;
+    box-shadow: 0 0 12px rgba(234, 179, 8, 0.5);
+    animation: mic-pulse 0.9s infinite ease-in-out;
+  }
+  #mic-btn.speaking {
+    background: radial-gradient(circle, var(--accent), #1d4ed8);
+    border-color: var(--accent);
+    color: white;
+    box-shadow: 0 0 12px rgba(37, 99, 235, 0.5);
+    animation: mic-pulse 0.7s infinite ease-in-out;
+  }
+  @keyframes mic-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.12); }
+  }
 </style>
 </head>
 <body>
@@ -373,7 +408,12 @@
         <span class="header-weather-temp" id="header-weather-temp">&mdash;</span>
         <span id="header-weather-city"></span>
       </div>
-      <button class="gear-btn" onclick="openConfigFolder()" title="Open config folder">&#9881;</button>
+      <button class="gear-btn" onclick="openConfigFolder()" title="Open config folder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <circle cx="12" cy="12" r="8" stroke-dasharray="2 2.5"></circle>
+        </svg>
+      </button>
     </div>
   </header>
   <div class="app-shell">
@@ -434,10 +474,21 @@
       </div>
       <footer>
         <form id="text-form" onsubmit="return sendText(event)">
+          <button type="button" id="mic-btn" class="icon-btn" disabled onclick="startListening()" title="Start listening">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <rect x="9" y="2" width="6" height="12" rx="3"></rect>
+              <path d="M5 11a7 7 0 0 0 14 0"></path>
+              <line x1="12" y1="18" x2="12" y2="22"></line>
+              <line x1="8" y1="22" x2="16" y2="22"></line>
+            </svg>
+          </button>
           <input type="text" id="text-input" placeholder="Connecting&hellip;" disabled autocomplete="off" />
-          <button type="submit" id="send-btn" disabled>Send</button>
+          <button type="submit" id="send-btn" class="icon-btn" disabled title="Send">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M2 21l21-9L2 3v7l15 2-15 2z"></path>
+            </svg>
+          </button>
         </form>
-        <button id="start-btn" disabled onclick="startListening()">Start listening</button>
       </footer>
     </section>
   </div>
@@ -586,16 +637,17 @@
       }
 
       const idle = status === 'idle';
-      const startBtn = document.getElementById('start-btn');
+      const micBtn = document.getElementById('mic-btn');
       const textInput = document.getElementById('text-input');
       const sendBtn = document.getElementById('send-btn');
       if (bridgeReady) {
-        startBtn.disabled = !idle;
+        micBtn.disabled = !idle;
         textInput.disabled = !idle;
         sendBtn.disabled = !idle;
         textInput.placeholder = idle ? 'Type a message...' : (labels[status] || status);
       }
-      startBtn.textContent = idle ? 'Start listening' : (labels[status] || status);
+      micBtn.className = 'icon-btn' + (idle ? '' : ' ' + status);
+      micBtn.title = idle ? 'Start listening' : (labels[status] || status);
     }
 
     function escapeHtml(text) {
