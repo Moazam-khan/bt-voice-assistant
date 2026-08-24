@@ -97,7 +97,7 @@ async def _weather_refresh_loop(chat_window: ChatWindow, settings: BTSettings) -
 
 
 async def _system_stats_loop(chat_window: ChatWindow) -> None:
-    """Push live CPU/RAM usage into the sidebar every few seconds.
+    """Push live CPU/RAM/disk usage into the sidebar every few seconds.
 
     Fully local (psutil reads the OS directly) — unlike weather, this
     has no failure mode worth handling specially.
@@ -108,7 +108,13 @@ async def _system_stats_loop(chat_window: ChatWindow) -> None:
     while True:
         stats = await get_system_stats()
         chat_window.set_system_stats(
-            stats.cpu_percent, stats.ram_percent, stats.ram_used_gb, stats.ram_total_gb
+            stats.cpu_percent,
+            stats.ram_percent,
+            stats.ram_used_gb,
+            stats.ram_total_gb,
+            stats.disk_percent,
+            stats.disk_used_gb,
+            stats.disk_total_gb,
         )
         await asyncio.sleep(_SYSTEM_STATS_REFRESH_S)
 

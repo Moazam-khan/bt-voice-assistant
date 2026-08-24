@@ -126,13 +126,44 @@
   .weather-temp { font-size: 26px; font-weight: 700; }
   .weather-desc { font-size: 12px; color: var(--muted); text-transform: capitalize; }
   .weather-city { font-size: 11px; color: var(--muted); margin-top: 4px; }
-  .meter-track { height: 5px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); overflow: hidden; margin-top: 4px; }
-  .meter-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), #60a5fa); transition: width 0.4s ease; }
-  .stat-block { margin-bottom: 10px; }
-  .stat-block:last-child { margin-bottom: 0; }
-  .stat-block-top { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; }
-  .stat-block-top .stat-label { color: var(--muted); }
-  .stat-block-top .stat-value { font-weight: 600; }
+  .gauge-row { display: flex; justify-content: space-between; margin-bottom: 12px; }
+  .gauge-item {
+    position: relative;
+    width: 30%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .gauge { width: 100%; height: auto; display: block; }
+  .gauge-track { fill: none; stroke: rgba(255, 255, 255, 0.07); stroke-width: 5; }
+  .gauge-fill {
+    fill: none;
+    stroke-width: 5;
+    stroke-linecap: round;
+    transform: rotate(-90deg);
+    transform-origin: 32px 32px;
+    transition: stroke-dashoffset 0.5s ease;
+  }
+  .gauge-fill.cpu { stroke: var(--accent); filter: drop-shadow(0 0 3px rgba(37, 99, 235, 0.6)); }
+  .gauge-fill.ram { stroke: #8b5cf6; filter: drop-shadow(0 0 3px rgba(139, 92, 246, 0.6)); }
+  .gauge-fill.disk { stroke: #14b8a6; filter: drop-shadow(0 0 3px rgba(20, 184, 166, 0.6)); }
+  .gauge-center {
+    position: absolute;
+    top: 44%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .gauge-name {
+    margin-top: 2px;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
 
   /* --- Center panel --- */
   .center-panel {
@@ -203,6 +234,25 @@
     -webkit-mask-image: linear-gradient(to top, black, transparent);
     mask-image: linear-gradient(to top, black, transparent);
     opacity: 0.9;
+  }
+  .hex-accent {
+    position: absolute;
+    top: 56px;
+    left: 18px;
+    width: 110px;
+    height: 70px;
+    background-image:
+      linear-gradient(30deg, rgba(96, 165, 250, 0.18) 12%, transparent 12.5%, transparent 87%, rgba(96, 165, 250, 0.18) 87.5%, rgba(96, 165, 250, 0.18)),
+      linear-gradient(150deg, rgba(96, 165, 250, 0.18) 12%, transparent 12.5%, transparent 87%, rgba(96, 165, 250, 0.18) 87.5%, rgba(96, 165, 250, 0.18)),
+      linear-gradient(30deg, rgba(96, 165, 250, 0.18) 12%, transparent 12.5%, transparent 87%, rgba(96, 165, 250, 0.18) 87.5%, rgba(96, 165, 250, 0.18)),
+      linear-gradient(150deg, rgba(96, 165, 250, 0.18) 12%, transparent 12.5%, transparent 87%, rgba(96, 165, 250, 0.18) 87.5%, rgba(96, 165, 250, 0.18)),
+      linear-gradient(60deg, rgba(96, 165, 250, 0.12) 25%, transparent 25.5%, transparent 75%, rgba(96, 165, 250, 0.12) 75%, rgba(96, 165, 250, 0.12)),
+      linear-gradient(60deg, rgba(96, 165, 250, 0.12) 25%, transparent 25.5%, transparent 75%, rgba(96, 165, 250, 0.12) 75%, rgba(96, 165, 250, 0.12));
+    background-size: 26px 46px;
+    background-position: 0 0, 0 0, 13px 23px, 13px 23px, 0 0, 13px 23px;
+    -webkit-mask-image: radial-gradient(ellipse, black 30%, transparent 75%);
+    mask-image: radial-gradient(ellipse, black 30%, transparent 75%);
+    pointer-events: none;
   }
   .hud-corner {
     position: absolute;
@@ -616,15 +666,34 @@
       </div>
       <div class="card">
         <div class="card-title">System</div>
-        <div class="stat-block">
-          <div class="stat-block-top"><span class="stat-label">CPU</span><span class="stat-value" id="cpu-value">&mdash;%</span></div>
-          <div class="meter-track"><div class="meter-fill" id="cpu-meter" style="width: 0%"></div></div>
-        </div>
-        <div class="stat-block">
-          <div class="stat-block-top"><span class="stat-label">RAM</span><span class="stat-value" id="ram-value">&mdash;%</span></div>
-          <div class="meter-track"><div class="meter-fill" id="ram-meter" style="width: 0%"></div></div>
+        <div class="gauge-row">
+          <div class="gauge-item">
+            <svg class="gauge" viewBox="0 0 64 64">
+              <circle class="gauge-track" cx="32" cy="32" r="26"></circle>
+              <circle class="gauge-fill cpu" id="cpu-gauge" cx="32" cy="32" r="26"></circle>
+            </svg>
+            <div class="gauge-center" id="cpu-value">&mdash;%</div>
+            <div class="gauge-name">CPU</div>
+          </div>
+          <div class="gauge-item">
+            <svg class="gauge" viewBox="0 0 64 64">
+              <circle class="gauge-track" cx="32" cy="32" r="26"></circle>
+              <circle class="gauge-fill ram" id="ram-gauge" cx="32" cy="32" r="26"></circle>
+            </svg>
+            <div class="gauge-center" id="ram-value">&mdash;%</div>
+            <div class="gauge-name">RAM</div>
+          </div>
+          <div class="gauge-item">
+            <svg class="gauge" viewBox="0 0 64 64">
+              <circle class="gauge-track" cx="32" cy="32" r="26"></circle>
+              <circle class="gauge-fill disk" id="disk-gauge" cx="32" cy="32" r="26"></circle>
+            </svg>
+            <div class="gauge-center" id="disk-value">&mdash;%</div>
+            <div class="gauge-name">DISK</div>
+          </div>
         </div>
         <div class="stat-row"><span class="stat-label">Memory</span><span class="stat-value" id="ram-detail">&mdash;</span></div>
+        <div class="stat-row"><span class="stat-label">Storage</span><span class="stat-value" id="disk-detail">&mdash;</span></div>
       </div>
       <div class="card">
         <div class="card-title">Session</div>
@@ -640,6 +709,7 @@
         <div class="stars"></div>
         <div class="grid-floor"></div>
       </div>
+      <div class="hex-accent"></div>
       <div class="hud-corner tl"></div>
       <div class="hud-corner tr"></div>
       <div class="hud-corner bl"></div>
@@ -786,12 +856,24 @@
       }
     }
 
-    function setSystemStats(cpuPercent, ramPercent, ramDetail) {
+    const GAUGE_CIRCUMFERENCE = 2 * Math.PI * 26;
+
+    function setGauge(id, percent) {
+      const fill = document.getElementById(id);
+      const offset = GAUGE_CIRCUMFERENCE * (1 - Math.max(0, Math.min(100, percent)) / 100);
+      fill.style.strokeDasharray = GAUGE_CIRCUMFERENCE;
+      fill.style.strokeDashoffset = offset;
+    }
+
+    function setSystemStats(cpuPercent, ramPercent, ramDetail, diskPercent, diskDetail) {
       document.getElementById('cpu-value').textContent = cpuPercent + '%';
-      document.getElementById('cpu-meter').style.width = cpuPercent + '%';
+      setGauge('cpu-gauge', cpuPercent);
       document.getElementById('ram-value').textContent = ramPercent + '%';
-      document.getElementById('ram-meter').style.width = ramPercent + '%';
+      setGauge('ram-gauge', ramPercent);
       document.getElementById('ram-detail').textContent = ramDetail;
+      document.getElementById('disk-value').textContent = diskPercent + '%';
+      setGauge('disk-gauge', diskPercent);
+      document.getElementById('disk-detail').textContent = diskDetail;
     }
 
     function clearConversation() {
