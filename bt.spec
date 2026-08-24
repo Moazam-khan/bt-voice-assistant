@@ -3,12 +3,15 @@
 
 Build with: pyinstaller bt.spec --noconfirm
 
-Two data-collection fixes were required by testing (see commit history
-for the full diagnosis): silero_vad and chromadb both load resources
-dynamically (importlib.resources / string-based plugin imports) in ways
+Three data-collection fixes were required by testing (see commit history
+for the full diagnosis) — silero_vad, chromadb, and piper all load
+resources dynamically or from a native (non-Python) library in ways
 PyInstaller's static analysis can't see on its own, causing the packaged
-app to silently crash on a background thread. --collect-data/--collect-all
-force those files and hidden imports to be bundled.
+app to crash — silently on a background thread for the first two, and as
+an uncatchable native crash for piper's bundled espeak-ng C library,
+which fails to find its phoneme data and aborts the whole process rather
+than raising a Python exception. --collect-data/--collect-all force
+those files and hidden imports to be bundled.
 
 config/, models/, and logs/ are NOT bundled here — they're copied next to
 the built .exe as external, editable files (see README's packaging
@@ -22,6 +25,7 @@ binaries = []
 hiddenimports = []
 
 datas += collect_data_files("silero_vad")
+datas += collect_data_files("piper")
 
 chromadb_datas, chromadb_binaries, chromadb_hiddenimports = collect_all("chromadb")
 datas += chromadb_datas
