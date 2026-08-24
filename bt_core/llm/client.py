@@ -21,6 +21,8 @@ from bt_core.logging_setup import get_logger
 
 log = get_logger(__name__)
 
+_RETRY_DELAY_S = 0.5
+
 
 class ToolCall(BaseModel):
     """A single tool invocation requested by the LLM."""
@@ -79,25 +81,33 @@ class OllamaClient:
 
         Raises:
             TimeoutError: If the model doesn't respond within
-                ``config.timeout_s``.
+                ``config.timeout_s``, on the second attempt (one retry is
+                attempted first for transient failures — a slow local
+                Ollama daemon under load timing out once doesn't
+                automatically mean the request itself is bad).
         """
         target_model = model or self._config.main_model
         raw_messages = [m.model_dump(exclude_none=True) for m in messages]
 
         start = time.monotonic()
         try:
-            response = await asyncio.wait_for(
-                self._client.chat(
-                    model=target_model,
-                    messages=raw_messages,
-                    tools=tools,
-                    options={"temperature": self._config.temperature},
-                ),
-                timeout=self._config.timeout_s,
+            response = await self._chat_once(target_model, raw_messages, tools)
+        except (TimeoutError, ConnectionError) as exc:
+            log.warning(
+                "llm_chat_failed_retrying",
+                model=target_model,
+                error=type(exc).__name__,
             )
-        except TimeoutError:
-            log.error("llm_chat_timeout", model=target_model, timeout_s=self._config.timeout_s)
-            raise
+            await asyncio.sleep(_RETRY_DELAY_S)
+            try:
+                response = await self._chat_once(target_model, raw_messages, tools)
+            except (TimeoutError, ConnectionError):
+                log.error(
+                    "llm_chat_failed_after_retry",
+                    model=target_model,
+                    timeout_s=self._config.timeout_s,
+                )
+                raise
         latency_ms = int((time.monotonic() - start) * 1000)
 
         tool_calls = [
@@ -118,3 +128,32 @@ class OllamaClient:
             content_length=len(result.content),
         )
         return result
+
+    async def _chat_once(
+        self,
+        model: str,
+        raw_messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None,
+    ) -> ollama.ChatResponse:
+        """Make a single chat attempt against Ollama, no retry.
+
+        Args:
+            model: Model name to use.
+            raw_messages: Messages already converted to plain dicts.
+            tools: Tool schemas, or None.
+
+        Returns:
+            The raw ollama response.
+
+        Raises:
+            TimeoutError: If Ollama doesn't respond within config.timeout_s.
+        """
+        return await asyncio.wait_for(
+            self._client.chat(
+                model=model,
+                messages=raw_messages,
+                tools=tools,
+                options={"temperature": self._config.temperature},
+            ),
+            timeout=self._config.timeout_s,
+        )

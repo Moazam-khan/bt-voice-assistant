@@ -102,6 +102,10 @@ class ChatWindow:
         """Append a BT message bubble to the transcript."""
         self._call_js("addBtMessage", text)
 
+    def show_error_message(self, text: str) -> None:
+        """Append a visually distinct error notice (e.g. a mic failure)."""
+        self._call_js("addErrorMessage", text)
+
     def set_status(self, status: str) -> None:
         """Update the status indicator.
 

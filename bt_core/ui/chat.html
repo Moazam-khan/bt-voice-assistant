@@ -13,6 +13,8 @@
     --accent: #2563eb;
     --user-bubble: #2563eb;
     --bt-bubble: #1f2430;
+    --error-bg: #2a1c1c;
+    --error-border: #b45309;
   }
   * { box-sizing: border-box; }
   body {
@@ -52,6 +54,10 @@
     flex-direction: column;
     gap: 10px;
   }
+  @keyframes msg-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
   .msg {
     max-width: 78%;
     padding: 10px 14px;
@@ -60,6 +66,7 @@
     line-height: 1.4;
     white-space: pre-wrap;
     word-wrap: break-word;
+    animation: msg-in 0.18s ease-out;
   }
   .msg.user {
     align-self: flex-end;
@@ -73,10 +80,43 @@
     border: 1px solid var(--border);
     border-bottom-left-radius: 4px;
   }
+  .msg.error {
+    align-self: flex-start;
+    background: var(--error-bg);
+    border: 1px solid var(--error-border);
+    border-left: 3px solid var(--error-border);
+    border-bottom-left-radius: 4px;
+  }
   .msg .role { font-size: 11px; color: var(--muted); margin-bottom: 3px; font-weight: 600; }
+  .msg .timestamp { font-size: 10px; color: var(--muted); margin-top: 4px; opacity: 0.7; }
+  .msg.user .timestamp { text-align: right; }
   #messages::-webkit-scrollbar { width: 8px; }
   #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
   #empty-state { margin: auto; text-align: center; color: var(--muted); font-size: 13px; padding: 0 24px; }
+  .typing-dots {
+    align-self: flex-start;
+    display: flex;
+    gap: 4px;
+    padding: 12px 16px;
+    background: var(--bt-bubble);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    border-bottom-left-radius: 4px;
+    animation: msg-in 0.18s ease-out;
+  }
+  .typing-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    animation: typing-bounce 1.2s infinite ease-in-out;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes typing-bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
   footer {
     padding: 12px 18px 14px;
     border-top: 1px solid var(--border);
@@ -144,24 +184,51 @@
       el.scrollTop = el.scrollHeight;
     }
 
-    function addUserMessage(text) {
+    function formatTime() {
+      return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function hideTypingIndicator() {
+      const existing = document.getElementById('typing-indicator');
+      if (existing) existing.remove();
+    }
+
+    function showTypingIndicator() {
+      if (document.getElementById('typing-indicator')) return;
       clearEmptyState();
       const container = document.getElementById('messages');
       const div = document.createElement('div');
-      div.className = 'msg user';
-      div.innerHTML = '<div class="role">You</div>' + escapeHtml(text);
+      div.className = 'typing-dots';
+      div.id = 'typing-indicator';
+      div.innerHTML = '<span></span><span></span><span></span>';
       container.appendChild(div);
       scrollToBottom();
     }
 
-    function addBtMessage(text) {
+    function addMessage(role, cssClass, text) {
+      hideTypingIndicator();
       clearEmptyState();
       const container = document.getElementById('messages');
       const div = document.createElement('div');
-      div.className = 'msg bt';
-      div.innerHTML = '<div class="role">BT</div>' + escapeHtml(text);
+      div.className = 'msg ' + cssClass;
+      div.innerHTML =
+        '<div class="role">' + role + '</div>' +
+        escapeHtml(text) +
+        '<div class="timestamp">' + formatTime() + '</div>';
       container.appendChild(div);
       scrollToBottom();
+    }
+
+    function addUserMessage(text) {
+      addMessage('You', 'user', text);
+    }
+
+    function addBtMessage(text) {
+      addMessage('BT', 'bt', text);
+    }
+
+    function addErrorMessage(text) {
+      addMessage('BT', 'error', text);
     }
 
     function setStatus(status) {
@@ -170,6 +237,12 @@
       dot.className = 'status-dot ' + status;
       const labels = { idle: 'Idle', listening: 'Listening', thinking: 'Thinking', speaking: 'Speaking' };
       label.textContent = labels[status] || status;
+
+      if (status === 'thinking') {
+        showTypingIndicator();
+      } else {
+        hideTypingIndicator();
+      }
 
       const idle = status === 'idle';
       const startBtn = document.getElementById('start-btn');

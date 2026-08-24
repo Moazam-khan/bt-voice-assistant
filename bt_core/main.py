@@ -124,7 +124,7 @@ async def _async_main(chat_window: ChatWindow) -> None:
     if listen_task.done() and not listen_task.cancelled() and listen_task.exception() is not None:
         log.error("bt_listen_loop_crashed", exc_info=listen_task.exception())
         chat_window.set_status("idle")
-        chat_window.show_bt_message(
+        chat_window.show_error_message(
             "I can't hear you right now — something's wrong with my microphone. "
             "You can still type to me below while that gets fixed."
         )
