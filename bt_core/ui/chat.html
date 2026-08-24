@@ -27,25 +27,66 @@
     flex-direction: column;
   }
   header {
+    position: relative;
     padding: 14px 18px;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     gap: 10px;
     background: var(--panel);
+    overflow: hidden;
   }
-  .status-dot {
-    width: 10px;
-    height: 10px;
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60%;
+    left: -10%;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.18), transparent 70%);
+    pointer-events: none;
+  }
+  header h1 { position: relative; font-size: 15px; font-weight: 600; margin: 0; letter-spacing: 0.02em; }
+  .orb {
+    position: relative;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
-    background: var(--muted);
-    transition: background 0.2s ease, box-shadow 0.2s ease;
+    background: radial-gradient(circle at 35% 30%, #9aa3b2, var(--muted));
+    box-shadow: 0 0 5px rgba(139, 147, 163, 0.4);
+    transition: background 0.25s ease, box-shadow 0.25s ease;
   }
-  .status-dot.listening { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
-  .status-dot.thinking { background: #eab308; box-shadow: 0 0 8px #eab308; }
-  .status-dot.speaking { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
-  header h1 { font-size: 15px; font-weight: 600; margin: 0; }
-  #status-label { font-size: 12px; color: var(--muted); margin-left: auto; }
+  .orb.listening {
+    background: radial-gradient(circle at 35% 30%, #4ade80, #16a34a);
+    box-shadow: 0 0 6px #22c55e, 0 0 16px rgba(34, 197, 94, 0.5);
+    animation: orb-pulse 1.4s infinite ease-in-out;
+  }
+  .orb.thinking {
+    background: radial-gradient(circle at 35% 30%, #fde047, #ca8a04);
+    box-shadow: 0 0 6px #eab308, 0 0 16px rgba(234, 179, 8, 0.5);
+    animation: orb-pulse 0.9s infinite ease-in-out;
+  }
+  .orb.speaking {
+    background: radial-gradient(circle at 35% 30%, #60a5fa, var(--accent));
+    box-shadow: 0 0 6px var(--accent), 0 0 16px rgba(37, 99, 235, 0.55);
+    animation: orb-pulse 0.7s infinite ease-in-out;
+  }
+  @keyframes orb-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.35); }
+  }
+  .status-badge {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-left: auto;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+  }
+  #status-label { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.02em; }
   #messages {
     flex: 1;
     overflow-y: auto;
@@ -158,9 +199,11 @@
 </head>
 <body>
   <header>
-    <div class="status-dot" id="status-dot"></div>
     <h1>BT</h1>
-    <span id="status-label">Idle</span>
+    <div class="status-badge">
+      <div class="orb" id="status-dot"></div>
+      <span id="status-label">Idle</span>
+    </div>
   </header>
   <div id="messages">
     <div id="empty-state">Type a message, or say &quot;Hey Jarvis&quot;, to talk to BT.</div>
@@ -234,7 +277,7 @@
     function setStatus(status) {
       const dot = document.getElementById('status-dot');
       const label = document.getElementById('status-label');
-      dot.className = 'status-dot ' + status;
+      dot.className = 'orb ' + status;
       const labels = { idle: 'Idle', listening: 'Listening', thinking: 'Thinking', speaking: 'Speaking' };
       label.textContent = labels[status] || status;
 
