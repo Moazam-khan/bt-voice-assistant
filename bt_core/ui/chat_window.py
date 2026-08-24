@@ -138,6 +138,24 @@ class ChatWindow:
         """Show a plain "unavailable" state in the weather card (e.g. no internet)."""
         self._call_js("setWeatherUnavailable")
 
+    def set_system_stats(
+        self, cpu_percent: float, ram_percent: float, ram_used_gb: float, ram_total_gb: float
+    ) -> None:
+        """Update the sidebar's live CPU/RAM usage card.
+
+        Args:
+            cpu_percent: Current CPU usage, 0-100.
+            ram_percent: Current RAM usage, 0-100.
+            ram_used_gb: RAM currently in use, in GB.
+            ram_total_gb: Total installed RAM, in GB.
+        """
+        self._call_js(
+            "setSystemStats",
+            f"{cpu_percent:.0f}",
+            f"{ram_percent:.0f}",
+            f"{ram_used_gb:.1f} / {ram_total_gb:.1f} GB",
+        )
+
     def _call_js(self, function_name: str, *args: str) -> None:
         """Safely call a JS function in the window, logging failures."""
         try:

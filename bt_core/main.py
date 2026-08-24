@@ -29,6 +29,7 @@ from bt_core.memory.structured import ConversationStore
 from bt_core.memory.vector import SemanticMemory
 from bt_core.pipeline import Pipeline
 from bt_core.stt.transcriber import Transcriber
+from bt_core.system_stats import get_system_stats
 from bt_core.tools.base import ToolError
 from bt_core.tools.registry import build_default_registry
 from bt_core.tools.weather import fetch_weather
@@ -37,6 +38,8 @@ from bt_core.tts.synthesizer import Synthesizer
 from bt_core.ui.chat_window import ChatWindow
 
 log = get_logger(__name__)
+
+_SYSTEM_STATS_REFRESH_S = 2
 
 
 async def _listen_loop(pipeline: Pipeline, settings: BTSettings, quit_event: asyncio.Event) -> None:
@@ -92,6 +95,23 @@ async def _weather_refresh_loop(chat_window: ChatWindow, settings: BTSettings) -
         await asyncio.sleep(settings.weather.refresh_minutes * 60)
 
 
+async def _system_stats_loop(chat_window: ChatWindow) -> None:
+    """Push live CPU/RAM usage into the sidebar every few seconds.
+
+    Fully local (psutil reads the OS directly) — unlike weather, this
+    has no failure mode worth handling specially.
+
+    Args:
+        chat_window: The chat window to push stats updates into.
+    """
+    while True:
+        stats = await get_system_stats()
+        chat_window.set_system_stats(
+            stats.cpu_percent, stats.ram_percent, stats.ram_used_gb, stats.ram_total_gb
+        )
+        await asyncio.sleep(_SYSTEM_STATS_REFRESH_S)
+
+
 async def _async_main(chat_window: ChatWindow) -> None:
     """Build BT's async components and run the continuous listen-respond loop.
 
@@ -143,6 +163,7 @@ async def _async_main(chat_window: ChatWindow) -> None:
     chat_window.set_session_info(settings.wake_word.phrase, settings.llm.main_model)
     chat_window.set_status("idle")
     weather_task = asyncio.create_task(_weather_refresh_loop(chat_window, settings))
+    system_stats_task = asyncio.create_task(_system_stats_loop(chat_window))
     log.info("bt_ready", wake_phrase=settings.wake_word.phrase)
     listen_task = asyncio.create_task(_listen_loop(pipeline, settings, quit_event))
     quit_task = asyncio.create_task(quit_event.wait())
@@ -163,6 +184,7 @@ async def _async_main(chat_window: ChatWindow) -> None:
         listen_task.cancel()
 
     weather_task.cancel()
+    system_stats_task.cancel()
     tray.stop()
     log.info("bt_shutting_down")
 

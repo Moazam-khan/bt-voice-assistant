@@ -58,6 +58,13 @@
   .weather-temp { font-size: 26px; font-weight: 700; }
   .weather-desc { font-size: 12px; color: var(--muted); text-transform: capitalize; }
   .weather-city { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .meter-track { height: 5px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); overflow: hidden; margin-top: 4px; }
+  .meter-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), #60a5fa); transition: width 0.4s ease; }
+  .stat-block { margin-bottom: 10px; }
+  .stat-block:last-child { margin-bottom: 0; }
+  .stat-block-top { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; }
+  .stat-block-top .stat-label { color: var(--muted); }
+  .stat-block-top .stat-value { font-weight: 600; }
 
   /* --- Center panel --- */
   .center-panel {
@@ -114,13 +121,25 @@
     inset: 0;
     border-radius: 50%;
     border: 1px solid var(--border);
+    animation: ring-spin 16s linear infinite;
   }
   .orb-ring::after {
     content: '';
     position: absolute;
     inset: 18px;
     border-radius: 50%;
-    border: 1px solid var(--border);
+    border: 1px dashed var(--border);
+  }
+  .orb-ring-outer {
+    position: absolute;
+    inset: -14px;
+    border-radius: 50%;
+    border: 1px solid rgba(37, 99, 235, 0.15);
+    animation: ring-spin 26s linear infinite reverse;
+  }
+  @keyframes ring-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
   .orb {
     position: relative;
@@ -130,6 +149,10 @@
     background: radial-gradient(circle at 35% 30%, #9aa3b2, var(--muted));
     box-shadow: 0 0 12px rgba(139, 147, 163, 0.35);
     transition: background 0.25s ease, box-shadow 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: orb-breathe 3s ease-in-out infinite;
   }
   .orb.listening {
     background: radial-gradient(circle at 35% 30%, #4ade80, #16a34a);
@@ -145,6 +168,25 @@
     background: radial-gradient(circle at 35% 30%, #60a5fa, var(--accent));
     box-shadow: 0 0 16px var(--accent), 0 0 40px rgba(37, 99, 235, 0.5);
     animation: orb-pulse 0.7s infinite ease-in-out;
+  }
+  @keyframes orb-breathe {
+    0%, 100% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.06); opacity: 1; }
+  }
+  .orb-bars { display: none; gap: 3px; align-items: center; justify-content: center; }
+  .orb.listening .orb-bars, .orb.speaking .orb-bars { display: flex; }
+  .orb-bars span {
+    width: 3px;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 2px;
+    animation: bar-bounce 0.9s infinite ease-in-out;
+  }
+  .orb-bars span:nth-child(2) { animation-delay: 0.15s; }
+  .orb-bars span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bar-bounce {
+    0%, 100% { transform: scaleY(0.35); }
+    50% { transform: scaleY(1); }
   }
   @keyframes orb-pulse {
     0%, 100% { transform: scale(1); }
@@ -305,6 +347,18 @@
         <div class="weather-city" id="weather-city"></div>
       </div>
       <div class="card">
+        <div class="card-title">System</div>
+        <div class="stat-block">
+          <div class="stat-block-top"><span class="stat-label">CPU</span><span class="stat-value" id="cpu-value">&mdash;%</span></div>
+          <div class="meter-track"><div class="meter-fill" id="cpu-meter" style="width: 0%"></div></div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-block-top"><span class="stat-label">RAM</span><span class="stat-value" id="ram-value">&mdash;%</span></div>
+          <div class="meter-track"><div class="meter-fill" id="ram-meter" style="width: 0%"></div></div>
+        </div>
+        <div class="stat-row"><span class="stat-label">Memory</span><span class="stat-value" id="ram-detail">&mdash;</span></div>
+      </div>
+      <div class="card">
         <div class="card-title">Session</div>
         <div class="stat-row"><span class="stat-label">Uptime</span><span class="stat-value" id="uptime">00:00:00</span></div>
         <div class="stat-row"><span class="stat-label">Wake word</span><span class="stat-value" id="wake-phrase">&mdash;</span></div>
@@ -319,8 +373,11 @@
         <span id="connection-label">Connecting&hellip;</span>
       </div>
       <div class="orb-wrap">
+        <div class="orb-ring-outer"></div>
         <div class="orb-ring"></div>
-        <div class="orb" id="status-dot"></div>
+        <div class="orb" id="status-dot">
+          <div class="orb-bars"><span></span><span></span><span></span></div>
+        </div>
       </div>
       <h1 class="bt-title">BT</h1>
       <div class="status-text" id="status-label">Idle</div>
@@ -422,6 +479,14 @@
       document.getElementById('weather-temp').textContent = '—';
       document.getElementById('weather-desc').textContent = 'Unavailable';
       document.getElementById('weather-city').textContent = 'Check your internet connection';
+    }
+
+    function setSystemStats(cpuPercent, ramPercent, ramDetail) {
+      document.getElementById('cpu-value').textContent = cpuPercent + '%';
+      document.getElementById('cpu-meter').style.width = cpuPercent + '%';
+      document.getElementById('ram-value').textContent = ramPercent + '%';
+      document.getElementById('ram-meter').style.width = ramPercent + '%';
+      document.getElementById('ram-detail').textContent = ramDetail;
     }
 
     function clearConversation() {
