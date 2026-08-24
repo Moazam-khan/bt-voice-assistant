@@ -335,67 +335,94 @@
     padding: 14px 16px;
     border-top: 1px solid var(--border);
   }
-  #text-form { display: flex; align-items: center; gap: 8px; }
+  #text-form { display: flex; align-items: center; gap: 10px; }
   #text-input {
     flex: 1;
-    padding: 10px 14px;
+    padding: 11px 16px;
     border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--bg);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: linear-gradient(160deg, #1a1e28, #14161c);
     color: var(--text);
     font-size: 13px;
     font-family: inherit;
     outline: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
-  #text-input:focus { border-color: var(--accent); }
+  #text-input:focus {
+    border-color: rgba(59, 130, 246, 0.45);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
   #text-input:disabled { opacity: 0.5; }
 
   .icon-btn {
     flex-shrink: 0;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: var(--bt-bubble);
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: linear-gradient(160deg, #232838, #171a22);
     color: var(--muted);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     padding: 0;
-    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 2px 6px rgba(0, 0, 0, 0.35);
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.25s ease, transform 0.15s ease,
+      border-color 0.2s ease;
   }
   .icon-btn svg { width: 17px; height: 17px; }
-  .icon-btn:hover:not(:disabled) { background: #2a3040; color: var(--text); }
-  .icon-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .icon-btn:hover:not(:disabled) {
+    background: linear-gradient(160deg, #2a3042, #1c202b);
+    color: var(--text);
+    border-color: rgba(255, 255, 255, 0.12);
+    transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+  .icon-btn:active:not(:disabled) { transform: translateY(0); }
+  .icon-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-  #send-btn { background: var(--accent); border-color: var(--accent); color: white; }
-  #send-btn:hover:not(:disabled) { background: #1d4ed8; }
+  #send-btn {
+    background: linear-gradient(160deg, #3b74f6, var(--accent));
+    border-color: rgba(255, 255, 255, 0.12);
+    color: white;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 2px 10px rgba(37, 99, 235, 0.35);
+  }
+  #send-btn:hover:not(:disabled) {
+    background: linear-gradient(160deg, #4c82ff, #1d4ed8);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 4px 16px rgba(37, 99, 235, 0.5);
+  }
 
   #mic-btn.listening {
-    background: radial-gradient(circle, #16a34a, #15803d);
-    border-color: #22c55e;
+    background: linear-gradient(160deg, #22c55e, #15803d);
+    border-color: rgba(74, 222, 128, 0.5);
     color: white;
-    box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
-    animation: mic-pulse 1.4s infinite ease-in-out;
+    animation: mic-pulse-green 1.6s infinite ease-in-out;
   }
   #mic-btn.thinking {
-    background: radial-gradient(circle, #ca8a04, #a16207);
-    border-color: #eab308;
+    background: linear-gradient(160deg, #eab308, #a16207);
+    border-color: rgba(250, 204, 21, 0.5);
     color: white;
-    box-shadow: 0 0 12px rgba(234, 179, 8, 0.5);
-    animation: mic-pulse 0.9s infinite ease-in-out;
+    animation: mic-pulse-amber 1s infinite ease-in-out;
   }
   #mic-btn.speaking {
-    background: radial-gradient(circle, var(--accent), #1d4ed8);
-    border-color: var(--accent);
+    background: linear-gradient(160deg, #3b82f6, #1d4ed8);
+    border-color: rgba(96, 165, 250, 0.5);
     color: white;
-    box-shadow: 0 0 12px rgba(37, 99, 235, 0.5);
-    animation: mic-pulse 0.7s infinite ease-in-out;
+    animation: mic-pulse-blue 0.8s infinite ease-in-out;
   }
-  @keyframes mic-pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.12); }
+  @keyframes mic-pulse-green {
+    0%, 100% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 0 rgba(34, 197, 94, 0); transform: scale(1); }
+    50% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 0 16px 2px rgba(34, 197, 94, 0.55); transform: scale(1.06); }
+  }
+  @keyframes mic-pulse-amber {
+    0%, 100% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 0 rgba(234, 179, 8, 0); transform: scale(1); }
+    50% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 0 16px 2px rgba(234, 179, 8, 0.55); transform: scale(1.06); }
+  }
+  @keyframes mic-pulse-blue {
+    0%, 100% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 0 rgba(37, 99, 235, 0); transform: scale(1); }
+    50% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 0 16px 2px rgba(37, 99, 235, 0.55); transform: scale(1.06); }
   }
 </style>
 </head>
