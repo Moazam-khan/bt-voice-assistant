@@ -43,6 +43,10 @@ class _ChatApi:
         """Called from JS when the user submits the text input box."""
         self._chat_window._on_text_message(text)
 
+    def open_config_folder(self) -> None:
+        """Called from JS when the user clicks the settings gear icon."""
+        self._chat_window._on_open_config()
+
 
 class ChatWindow:
     """Wraps a pywebview window showing BT's conversation transcript."""
@@ -51,6 +55,7 @@ class ChatWindow:
         """Create the window (not shown until :meth:`start` is called)."""
         self._on_start_listening: Callable[[], None] = lambda: None
         self._on_text_message: Callable[[str], None] = lambda text: None
+        self._on_open_config: Callable[[], None] = lambda: None
         html = _HTML_PATH.read_text(encoding="utf-8")
         self._window = webview.create_window(
             "BT",
@@ -82,6 +87,15 @@ class ChatWindow:
                 (on a different thread), it must schedule that itself.
         """
         self._on_text_message = handler
+
+    def set_open_config_handler(self, handler: Callable[[], None]) -> None:
+        """Set the callback invoked when the user clicks the settings gear icon.
+
+        Args:
+            handler: Called with no arguments, on pywebview's own calling
+                thread.
+        """
+        self._on_open_config = handler
 
     def start(self, on_ready: Callable[[], None]) -> None:
         """Show the window and block the calling thread until it's closed.

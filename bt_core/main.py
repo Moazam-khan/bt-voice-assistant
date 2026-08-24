@@ -16,6 +16,7 @@ Run with:
 from __future__ import annotations
 
 import asyncio
+import os
 import threading
 
 from bt_core.audio.capture import MicrophoneCapture
@@ -159,6 +160,7 @@ async def _async_main(chat_window: ChatWindow) -> None:
             _handle_text_and_play(pipeline, settings, text), loop
         )
     )
+    chat_window.set_open_config_handler(lambda: os.startfile(str(settings.paths.root / "config")))
 
     chat_window.set_session_info(settings.wake_word.phrase, settings.llm.main_model)
     chat_window.set_status("idle")
