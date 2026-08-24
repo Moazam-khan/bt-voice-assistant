@@ -61,6 +61,12 @@ memory:
   chroma_path: "chroma_db"
   sqlite_path: "bt_memory.sqlite3"
 
+# Sidebar weather widget. BT's only feature that needs internet access —
+# everything else is fully local. Uses Open-Meteo (free, no API key).
+weather:
+  default_city: "Riyadh"
+  refresh_minutes: 30
+
 tools:
   screenshot_dir: "%USERPROFILE%/Desktop"
   default_permission_tier: "confirm" # safe | confirm | admin

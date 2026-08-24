@@ -124,6 +124,20 @@ class ChatWindow:
         """
         self._call_js("setSessionInfo", wake_phrase, model_name)
 
+    def set_weather(self, city: str, temperature_c: float, description: str) -> None:
+        """Update the sidebar's weather card.
+
+        Args:
+            city: Resolved city name.
+            temperature_c: Current temperature in Celsius.
+            description: Short conditions description (e.g. "overcast").
+        """
+        self._call_js("setWeather", city, f"{temperature_c:.0f}°C", description)
+
+    def set_weather_unavailable(self) -> None:
+        """Show a plain "unavailable" state in the weather card (e.g. no internet)."""
+        self._call_js("setWeatherUnavailable")
+
     def _call_js(self, function_name: str, *args: str) -> None:
         """Safely call a JS function in the window, logging failures."""
         try:

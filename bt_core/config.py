@@ -140,6 +140,17 @@ class MemoryConfig(BaseModel):
     sqlite_path: ExpandedPath
 
 
+class WeatherConfig(BaseModel):
+    """Sidebar weather widget settings.
+
+    This is BT's only feature that requires internet access — everything
+    else runs locally.
+    """
+
+    default_city: str
+    refresh_minutes: int = Field(gt=0)
+
+
 class ToolsConfig(BaseModel):
     """Defaults applied to every executable tool."""
 
@@ -180,6 +191,7 @@ class BTSettings(BaseSettings):
     llm: LlmConfig
     tts: TtsConfig
     memory: MemoryConfig
+    weather: WeatherConfig
     tools: ToolsConfig
     apps: dict[str, ExpandedPath]
     latency_targets_ms: LatencyTargetsMsConfig

@@ -54,6 +54,10 @@
   .stat-row { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; font-size: 12px; }
   .stat-label { color: var(--muted); }
   .stat-value { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .weather-main { display: flex; align-items: baseline; gap: 8px; }
+  .weather-temp { font-size: 26px; font-weight: 700; }
+  .weather-desc { font-size: 12px; color: var(--muted); text-transform: capitalize; }
+  .weather-city { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
   /* --- Center panel --- */
   .center-panel {
@@ -163,7 +167,22 @@
     border-bottom: 1px solid var(--border);
     font-size: 13px;
     font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
+  #clear-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  #clear-btn:hover { background: rgba(255, 255, 255, 0.06); color: var(--text); }
   #messages {
     flex: 1;
     overflow-y: auto;
@@ -278,6 +297,14 @@
     <aside class="sidebar">
       <div class="sidebar-header"><div class="logo-dot"></div>BT</div>
       <div class="card">
+        <div class="card-title">Weather</div>
+        <div class="weather-main">
+          <span class="weather-temp" id="weather-temp">&mdash;</span>
+          <span class="weather-desc" id="weather-desc">Loading&hellip;</span>
+        </div>
+        <div class="weather-city" id="weather-city"></div>
+      </div>
+      <div class="card">
         <div class="card-title">Session</div>
         <div class="stat-row"><span class="stat-label">Uptime</span><span class="stat-value" id="uptime">00:00:00</span></div>
         <div class="stat-row"><span class="stat-label">Wake word</span><span class="stat-value" id="wake-phrase">&mdash;</span></div>
@@ -300,7 +327,10 @@
     </main>
 
     <section class="chat-panel">
-      <div class="chat-header">Conversation</div>
+      <div class="chat-header">
+        <span>Conversation</span>
+        <button id="clear-btn" onclick="clearConversation()">Clear</button>
+      </div>
       <div id="messages">
         <div id="empty-state">Type a message, or say &quot;Hey Jarvis&quot;, to talk to BT.</div>
       </div>
@@ -380,6 +410,25 @@
     function setSessionInfo(wakePhrase, modelName) {
       document.getElementById('wake-phrase').textContent = wakePhrase;
       document.getElementById('model-name').textContent = modelName;
+    }
+
+    function setWeather(city, temp, description) {
+      document.getElementById('weather-temp').textContent = temp;
+      document.getElementById('weather-desc').textContent = description;
+      document.getElementById('weather-city').textContent = city;
+    }
+
+    function setWeatherUnavailable() {
+      document.getElementById('weather-temp').textContent = '—';
+      document.getElementById('weather-desc').textContent = 'Unavailable';
+      document.getElementById('weather-city').textContent = 'Check your internet connection';
+    }
+
+    function clearConversation() {
+      const container = document.getElementById('messages');
+      container.innerHTML = '<div id="empty-state">Type a message, or say &quot;Hey Jarvis&quot;, to talk to BT.</div>';
+      messageCount = 0;
+      document.getElementById('message-count').textContent = '0';
     }
 
     function formatUptime(ms) {

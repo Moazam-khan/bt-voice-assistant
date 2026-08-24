@@ -29,7 +29,9 @@ from bt_core.memory.structured import ConversationStore
 from bt_core.memory.vector import SemanticMemory
 from bt_core.pipeline import Pipeline
 from bt_core.stt.transcriber import Transcriber
+from bt_core.tools.base import ToolError
 from bt_core.tools.registry import build_default_registry
+from bt_core.tools.weather import fetch_weather
 from bt_core.tray import TrayIcon
 from bt_core.tts.synthesizer import Synthesizer
 from bt_core.ui.chat_window import ChatWindow
@@ -65,6 +67,29 @@ async def _handle_text_and_play(pipeline: Pipeline, settings: BTSettings, text: 
     reply_audio = await pipeline.handle_text(text)
     if reply_audio is not None and len(reply_audio) > 0:
         await play_audio(reply_audio, settings.tts.sample_rate)
+
+
+async def _weather_refresh_loop(chat_window: ChatWindow, settings: BTSettings) -> None:
+    """Fetch and display weather on startup, then refresh periodically.
+
+    BT's only network-dependent feature — a failure here (no internet,
+    city not found) just shows an "unavailable" state, logged, and never
+    affects the rest of the app.
+
+    Args:
+        chat_window: The chat window to push weather updates into.
+        settings: BT's full settings.
+    """
+    while True:
+        try:
+            report = await fetch_weather(settings.weather.default_city)
+            chat_window.set_weather(report.city, report.temperature_c, report.description)
+        except ToolError:
+            log.warning(
+                "weather_refresh_failed", city=settings.weather.default_city, exc_info=True
+            )
+            chat_window.set_weather_unavailable()
+        await asyncio.sleep(settings.weather.refresh_minutes * 60)
 
 
 async def _async_main(chat_window: ChatWindow) -> None:
@@ -117,6 +142,7 @@ async def _async_main(chat_window: ChatWindow) -> None:
 
     chat_window.set_session_info(settings.wake_word.phrase, settings.llm.main_model)
     chat_window.set_status("idle")
+    weather_task = asyncio.create_task(_weather_refresh_loop(chat_window, settings))
     log.info("bt_ready", wake_phrase=settings.wake_word.phrase)
     listen_task = asyncio.create_task(_listen_loop(pipeline, settings, quit_event))
     quit_task = asyncio.create_task(quit_event.wait())
@@ -136,6 +162,7 @@ async def _async_main(chat_window: ChatWindow) -> None:
     else:
         listen_task.cancel()
 
+    weather_task.cancel()
     tray.stop()
     log.info("bt_shutting_down")
 
