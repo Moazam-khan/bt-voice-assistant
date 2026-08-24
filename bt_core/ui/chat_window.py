@@ -55,8 +55,9 @@ class ChatWindow:
         self._window = webview.create_window(
             "BT",
             html=html,
-            width=420,
-            height=640,
+            width=920,
+            height=600,
+            min_size=(700, 480),
             background_color="#0f1115",
             js_api=_ChatApi(self),
         )
@@ -113,6 +114,15 @@ class ChatWindow:
             status: One of "idle", "listening", "thinking", "speaking".
         """
         self._call_js("setStatus", status)
+
+    def set_session_info(self, wake_phrase: str, model_name: str) -> None:
+        """Populate the sidebar's static session details, once at startup.
+
+        Args:
+            wake_phrase: The configured wake word phrase.
+            model_name: The main LLM model name in use.
+        """
+        self._call_js("setSessionInfo", wake_phrase, model_name)
 
     def _call_js(self, function_name: str, *args: str) -> None:
         """Safely call a JS function in the window, logging failures."""

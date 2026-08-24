@@ -115,6 +115,7 @@ async def _async_main(chat_window: ChatWindow) -> None:
         )
     )
 
+    chat_window.set_session_info(settings.wake_word.phrase, settings.llm.main_model)
     chat_window.set_status("idle")
     log.info("bt_ready", wake_phrase=settings.wake_word.phrase)
     listen_task = asyncio.create_task(_listen_loop(pipeline, settings, quit_event))
