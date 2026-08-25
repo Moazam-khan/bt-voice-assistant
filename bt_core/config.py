@@ -123,6 +123,7 @@ class LlmConfig(BaseModel):
     embed_model: str
     timeout_s: int = Field(gt=0)
     temperature: float = Field(ge=0.0, le=2.0)
+    history_turns: int = Field(gt=0)
 
 
 class TtsConfig(BaseModel):

@@ -51,6 +51,10 @@ llm:
   embed_model: "nomic-embed-text"
   timeout_s: 30
   temperature: 0.3
+  # How many recent user/assistant turns to replay as context on every turn,
+  # so BT remembers what was just said (e.g. "that one" / "which on top of
+  # the list"). Higher = better short-term memory but more tokens per turn.
+  history_turns: 12
 
 tts:
   engine: "piper"

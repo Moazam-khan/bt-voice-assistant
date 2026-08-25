@@ -61,6 +61,7 @@ class Pipeline:
         semantic_memory: SemanticMemory,
         system_prompt: str,
         main_model: str,
+        history_turns: int,
         on_status_change: Callable[[str], None] | None = None,
         on_user_text: Callable[[str], None] | None = None,
         on_assistant_text: Callable[[str], None] | None = None,
@@ -80,6 +81,10 @@ class Pipeline:
             semantic_memory: ChromaDB semantic recall.
             system_prompt: BT's system prompt text.
             main_model: The LLM model name to use for tool-calling turns.
+            history_turns: How many recent user/assistant turns to replay
+                as context on every LLM call, so BT remembers what was
+                just said in this conversation — not just the fuzzy,
+                topic-based recall semantic_memory provides.
             on_status_change: Optional UI hook, called with one of "idle",
                 "listening", "thinking", "speaking" as the pipeline's state
                 changes. The pipeline has no awareness of what (if
@@ -108,6 +113,7 @@ class Pipeline:
         self._memory = semantic_memory
         self._system_prompt = system_prompt
         self._main_model = main_model
+        self._history_turns = history_turns
         self._on_status_change = on_status_change or (lambda status: None)
         self._on_user_text = on_user_text or (lambda text: None)
         self._on_assistant_text = on_assistant_text or (lambda text: None)
@@ -272,6 +278,9 @@ class Pipeline:
             messages.append(
                 ChatMessage(role="system", content=f"Relevant past context:\n{context}")
             )
+
+        recent_turns = await self._conversation.get_recent(limit=self._history_turns)
+        messages.extend(ChatMessage(role=turn.role, content=turn.content) for turn in recent_turns)
 
         messages.append(ChatMessage(role="user", content=user_text))
         try:

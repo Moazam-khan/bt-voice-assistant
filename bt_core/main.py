@@ -149,6 +149,7 @@ async def _async_main(chat_window: ChatWindow) -> None:
         ),
         system_prompt=system_prompt,
         main_model=settings.llm.main_model,
+        history_turns=settings.llm.history_turns,
         on_status_change=chat_window.set_status,
         on_user_text=chat_window.show_user_message,
         on_assistant_text=chat_window.show_bt_message,
