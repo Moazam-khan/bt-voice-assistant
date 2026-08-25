@@ -22,7 +22,13 @@ from PyInstaller.utils.hooks import collect_all, collect_data_files
 
 datas = [
     ("bt_core/ui/chat.html", "bt_core/ui"),
+    ("bt_core/ui/chat.js", "bt_core/ui"),
     ("bt_core/ui/icon.ico", "bt_core/ui"),
+    ("bt_core/ui/css/base.css", "bt_core/ui/css"),
+    ("bt_core/ui/css/sidebar.css", "bt_core/ui/css"),
+    ("bt_core/ui/css/center_panel.css", "bt_core/ui/css"),
+    ("bt_core/ui/css/orb.css", "bt_core/ui/css"),
+    ("bt_core/ui/css/chat_panel.css", "bt_core/ui/css"),
 ]
 binaries = []
 hiddenimports = []

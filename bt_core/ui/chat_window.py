@@ -20,8 +20,27 @@ from bt_core.logging_setup import get_logger
 
 log = get_logger(__name__)
 
-_HTML_PATH = Path(__file__).resolve().parent / "chat.html"
-_ICON_PATH = Path(__file__).resolve().parent / "icon.ico"
+_UI_DIR = Path(__file__).resolve().parent
+_HTML_PATH = _UI_DIR / "chat.html"
+_JS_PATH = _UI_DIR / "chat.js"
+_ICON_PATH = _UI_DIR / "icon.ico"
+_CSS_DIR = _UI_DIR / "css"
+_CSS_FILES = ("base.css", "sidebar.css", "center_panel.css", "orb.css", "chat_panel.css")
+
+
+def _build_page() -> str:
+    """Assemble chat.html's template with its external CSS/JS files inlined.
+
+    pywebview loads this as a raw HTML string rather than a file:// URL, so
+    relative <link>/<script src> references would resolve against different
+    base directories in dev vs. a PyInstaller-frozen build. Inlining at load
+    time keeps the source split into small, single-responsibility files
+    while still shipping pywebview one self-contained document.
+    """
+    styles = "\n".join((_CSS_DIR / name).read_text(encoding="utf-8") for name in _CSS_FILES)
+    script = _JS_PATH.read_text(encoding="utf-8")
+    template = _HTML_PATH.read_text(encoding="utf-8")
+    return template.replace("{{STYLES}}", styles).replace("{{SCRIPT}}", script)
 
 
 class _ChatApi:
@@ -57,7 +76,7 @@ class ChatWindow:
         self._on_start_listening: Callable[[], None] = lambda: None
         self._on_text_message: Callable[[str], None] = lambda text: None
         self._on_open_config: Callable[[], None] = lambda: None
-        html = _HTML_PATH.read_text(encoding="utf-8")
+        html = _build_page()
         self._window = webview.create_window(
             "BT",
             html=html,

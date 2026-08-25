@@ -1,0 +1,104 @@
+/* --- Sidebar --- */
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  position: relative;
+  background: linear-gradient(180deg, var(--sidebar), #0e1015);
+  border-right: 1px solid var(--border);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.sidebar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -1px;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(37, 99, 235, 0.3), transparent);
+  pointer-events: none;
+}
+.sidebar-header { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; letter-spacing: 0.03em; }
+.logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); flex-shrink: 0; }
+.card {
+  background: linear-gradient(160deg, #1b1f29, var(--panel));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 6px 14px rgba(0, 0, 0, 0.28);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(96, 165, 250, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 10px 22px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(96, 165, 250, 0.08);
+}
+.card-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+  padding-bottom: 7px;
+  position: relative;
+}
+.card-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 22px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
+.stat-row { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; font-size: 12px; }
+.stat-label { color: var(--muted); }
+.stat-value { font-weight: 600; font-variant-numeric: tabular-nums; }
+.weather-main { display: flex; align-items: baseline; gap: 8px; }
+.weather-temp { font-size: 26px; font-weight: 700; }
+.weather-desc { font-size: 12px; color: var(--muted); text-transform: capitalize; }
+.weather-city { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.gauge-row { display: flex; justify-content: space-between; margin-bottom: 12px; }
+.gauge-item {
+  position: relative;
+  width: 30%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.gauge { width: 100%; height: auto; display: block; }
+.gauge-track { fill: none; stroke: rgba(255, 255, 255, 0.07); stroke-width: 5; }
+.gauge-fill {
+  fill: none;
+  stroke-width: 5;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 32px 32px;
+  transition: stroke-dashoffset 0.5s ease;
+}
+.gauge-fill.cpu { stroke: var(--accent); filter: drop-shadow(0 0 3px rgba(37, 99, 235, 0.6)); }
+.gauge-fill.ram { stroke: #8b5cf6; filter: drop-shadow(0 0 3px rgba(139, 92, 246, 0.6)); }
+.gauge-fill.disk { stroke: #14b8a6; filter: drop-shadow(0 0 3px rgba(20, 184, 166, 0.6)); }
+.gauge-center {
+  position: absolute;
+  top: 44%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.gauge-name {
+  margin-top: 2px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
