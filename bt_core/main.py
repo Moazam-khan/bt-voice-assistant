@@ -152,6 +152,8 @@ async def _async_main(chat_window: ChatWindow) -> None:
         on_status_change=chat_window.set_status,
         on_user_text=chat_window.show_user_message,
         on_assistant_text=chat_window.show_bt_message,
+        on_tool_used=chat_window.show_tool_action,
+        on_confirmation_needed=chat_window.show_confirmation_prompt,
     )
 
     loop = asyncio.get_running_loop()
@@ -167,6 +169,9 @@ async def _async_main(chat_window: ChatWindow) -> None:
         )
     )
     chat_window.set_open_config_handler(lambda: os.startfile(str(settings.paths.root / "config")))
+    chat_window.set_confirmation_response_handler(
+        lambda allowed: loop.call_soon_threadsafe(pipeline.respond_confirmation, allowed)
+    )
 
     chat_window.set_session_info(settings.wake_word.phrase, settings.llm.main_model)
     chat_window.set_status("idle")

@@ -60,6 +60,42 @@ function addErrorMessage(text) {
   addMessage('BT', 'error', text);
 }
 
+function addActionMessage(toolName, success, message) {
+  hideTypingIndicator();
+  clearEmptyState();
+  const container = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg action' + (success ? '' : ' failed');
+  const icon = success
+    ? '<path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="9"></circle>'
+    : '<circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>';
+  div.innerHTML =
+    '<svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round">' + icon + '</svg>' +
+    '<span><span class="action-tool">' + escapeHtml(toolName) + '</span> ' + escapeHtml(message) + '</span>';
+  container.appendChild(div);
+  scrollToBottom();
+}
+
+function showConfirmationPrompt(toolName, description) {
+  clearEmptyState();
+  const existing = document.getElementById('confirm-card');
+  if (existing) existing.remove();
+  const container = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'confirm-card';
+  div.id = 'confirm-card';
+  div.innerHTML =
+    '<div class="confirm-text">BT wants to run <b>' + escapeHtml(toolName) + '</b> — ' +
+    escapeHtml(description) + '</div>' +
+    '<div class="confirm-actions">' +
+    '<button type="button" class="confirm-allow" onclick="respondConfirmation(true)">Allow</button>' +
+    '<button type="button" class="confirm-deny" onclick="respondConfirmation(false)">Deny</button>' +
+    '</div>';
+  container.appendChild(div);
+  scrollToBottom();
+}
+
 function setSessionInfo(wakePhrase, modelName) {
   document.getElementById('wake-phrase').textContent = wakePhrase;
   document.getElementById('model-name').textContent = modelName;
@@ -177,6 +213,14 @@ let bridgeReady = false;
 function startListening() {
   if (bridgeReady) {
     window.pywebview.api.start_listening();
+  }
+}
+
+function respondConfirmation(allowed) {
+  const card = document.getElementById('confirm-card');
+  if (card) card.remove();
+  if (bridgeReady) {
+    window.pywebview.api.respond_confirmation(allowed);
   }
 }
 

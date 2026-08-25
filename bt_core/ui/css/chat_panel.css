@@ -85,6 +85,28 @@
   border-bottom-left-radius: 4px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
+.msg.action {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 90%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  background: linear-gradient(160deg, #17251f, #121815);
+  border: 1px solid rgba(20, 184, 166, 0.28);
+  border-left: 3px solid #14b8a6;
+  color: var(--muted);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+.msg.action.failed {
+  border-color: rgba(239, 68, 68, 0.3);
+  border-left-color: #ef4444;
+}
+.action-icon { width: 14px; height: 14px; flex-shrink: 0; color: #14b8a6; }
+.msg.action.failed .action-icon { color: #ef4444; }
+.action-tool { font-weight: 700; color: var(--text); }
 .msg .role { font-size: 10px; color: var(--muted); margin-bottom: 3px; font-weight: 600; }
 .msg .timestamp { font-size: 10px; color: var(--muted); margin-top: 4px; opacity: 0.7; }
 .msg.user .timestamp { text-align: right; }
@@ -121,6 +143,32 @@
   0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
   30% { transform: translateY(-4px); opacity: 1; }
 }
+.confirm-card {
+  align-self: stretch;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: linear-gradient(160deg, #2a2410, #1c1a10);
+  border: 1px solid rgba(234, 179, 8, 0.4);
+  border-left: 3px solid var(--amber, #eab308);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  animation: msg-in 0.18s ease-out;
+}
+.confirm-text { font-size: 12.5px; color: #e9d9a8; line-height: 1.5; }
+.confirm-text b { color: #fde68a; font-family: inherit; }
+.confirm-actions { display: flex; gap: 8px; margin-top: 10px; }
+.confirm-actions button {
+  flex: 1;
+  padding: 7px 0;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+.confirm-actions button:hover { filter: brightness(1.15); }
+.confirm-allow { background: linear-gradient(160deg, #22c55e, #15803d); color: white; }
+.confirm-deny { background: linear-gradient(160deg, #3a3f4a, #262b36); color: var(--text); }
 footer {
   padding: 14px 16px;
   border-top: 1px solid var(--border);

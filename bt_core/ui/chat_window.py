@@ -73,6 +73,10 @@ class _ChatApi:
         """Called from JS when the user clicks the settings gear icon."""
         self._chat_window._on_open_config()
 
+    def respond_confirmation(self, allowed: bool) -> None:
+        """Called from JS when the user clicks Allow/Deny on a tool prompt."""
+        self._chat_window._on_confirmation_response(allowed)
+
 
 class ChatWindow:
     """Wraps a pywebview window showing BT's conversation transcript."""
@@ -82,6 +86,7 @@ class ChatWindow:
         self._on_start_listening: Callable[[], None] = lambda: None
         self._on_text_message: Callable[[str], None] = lambda text: None
         self._on_open_config: Callable[[], None] = lambda: None
+        self._on_confirmation_response: Callable[[bool], None] = lambda allowed: None
         html = _build_page()
         self._window = webview.create_window(
             "BT",
@@ -123,6 +128,17 @@ class ChatWindow:
         """
         self._on_open_config = handler
 
+    def set_confirmation_response_handler(self, handler: Callable[[bool], None]) -> None:
+        """Set the callback invoked when the user clicks Allow/Deny on a tool prompt.
+
+        Args:
+            handler: Called with whether the user allowed the pending tool
+                call, on pywebview's own calling thread — if it needs to
+                reach the asyncio pipeline (on a different thread), it must
+                schedule that itself.
+        """
+        self._on_confirmation_response = handler
+
     def start(self, on_ready: Callable[[], None]) -> None:
         """Show the window and block the calling thread until it's closed.
 
@@ -146,6 +162,26 @@ class ChatWindow:
     def show_error_message(self, text: str) -> None:
         """Append a visually distinct error notice (e.g. a mic failure)."""
         self._call_js("addErrorMessage", text)
+
+    def show_tool_action(self, tool_name: str, success: bool, message: str) -> None:
+        """Append a compact "this just happened" line to the transcript.
+
+        Args:
+            tool_name: The tool that ran (or was denied).
+            success: Whether it completed successfully.
+            message: Its spoken-friendly result or failure message.
+        """
+        self._call_js("addActionMessage", tool_name, success, message)
+
+    def show_confirmation_prompt(self, tool_name: str, description: str) -> None:
+        """Show an Allow/Deny prompt for a CONFIRM-tier tool call.
+
+        Args:
+            tool_name: The tool requesting permission to run.
+            description: The tool's one-line description, shown to the
+                user so they know what they're approving.
+        """
+        self._call_js("showConfirmationPrompt", tool_name, description)
 
     def set_status(self, status: str) -> None:
         """Update the status indicator.
@@ -208,7 +244,7 @@ class ChatWindow:
             f"{disk_used_gb:.0f} / {disk_total_gb:.0f} GB",
         )
 
-    def _call_js(self, function_name: str, *args: str) -> None:
+    def _call_js(self, function_name: str, *args: str | bool) -> None:
         """Safely call a JS function in the window, logging failures."""
         try:
             arg_literals = ", ".join(json.dumps(a) for a in args)

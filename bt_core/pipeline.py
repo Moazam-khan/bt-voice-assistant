@@ -9,6 +9,7 @@ with a fallback spoken response — one bad turn never crashes the loop.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
@@ -22,7 +23,7 @@ from bt_core.logging_setup import get_logger
 from bt_core.memory.structured import ConversationStore, ConversationTurn
 from bt_core.memory.vector import SemanticMemory
 from bt_core.stt.transcriber import Transcriber
-from bt_core.tools.base import PermissionTier
+from bt_core.tools.base import PermissionTier, ToolResult
 from bt_core.tools.registry import ToolRegistry
 from bt_core.tts.synthesizer import Synthesizer
 
@@ -63,6 +64,8 @@ class Pipeline:
         on_status_change: Callable[[str], None] | None = None,
         on_user_text: Callable[[str], None] | None = None,
         on_assistant_text: Callable[[str], None] | None = None,
+        on_tool_used: Callable[[str, bool, str], None] | None = None,
+        on_confirmation_needed: Callable[[str, str], None] | None = None,
     ) -> None:
         """Initialize the pipeline with its already-built dependencies.
 
@@ -85,6 +88,15 @@ class Pipeline:
                 user utterance once STT completes.
             on_assistant_text: Optional UI hook, called with BT's final
                 text reply once the LLM/tool loop completes.
+            on_tool_used: Optional UI hook, called with (tool_name, success,
+                message) every time a tool actually runs — including tools
+                that were denied confirmation, so the UI can show what was
+                attempted either way.
+            on_confirmation_needed: Optional UI hook, called with
+                (tool_name, description) when a CONFIRM-tier tool wants to
+                run. The pipeline then awaits :meth:`respond_confirmation`
+                being called back before continuing — the hook itself is
+                fire-and-forget, only used to tell the UI to show a prompt.
         """
         self._wake_word = wake_word
         self._vad = vad
@@ -99,9 +111,12 @@ class Pipeline:
         self._on_status_change = on_status_change or (lambda status: None)
         self._on_user_text = on_user_text or (lambda text: None)
         self._on_assistant_text = on_assistant_text or (lambda text: None)
+        self._on_tool_used = on_tool_used or (lambda name, success, message: None)
+        self._on_confirmation_needed = on_confirmation_needed or (lambda name, description: None)
         self._state = _ListenState.WAITING_FOR_WAKE_WORD
         self._recording = False
         self._utterance_buffer: list[np.ndarray] = []
+        self._confirmation_future: asyncio.Future[bool] | None = None
 
     def trigger_listening(self) -> None:
         """Manually start listening for a command, bypassing the wake word.
@@ -113,6 +128,38 @@ class Pipeline:
             self._vad.reset()
             self._state = _ListenState.LISTENING_FOR_COMMAND
             self._on_status_change("listening")
+
+    def respond_confirmation(self, allowed: bool) -> None:
+        """Resolve a pending CONFIRM-tier tool prompt from the UI.
+
+        Called externally (e.g. from an Allow/Deny button) once per
+        confirmation request. A no-op if nothing is currently pending, or
+        if it's somehow called twice for the same prompt — the tool-calling
+        loop only ever awaits one confirmation at a time.
+
+        Args:
+            allowed: Whether the user approved the pending tool call.
+        """
+        if self._confirmation_future is not None and not self._confirmation_future.done():
+            self._confirmation_future.set_result(allowed)
+
+    async def _request_confirmation(self, tool_name: str, description: str) -> bool:
+        """Ask the UI to confirm a tool call and wait for the response.
+
+        Args:
+            tool_name: The tool requesting confirmation.
+            description: The tool's one-line description, shown to the user
+                so they know what they're approving.
+
+        Returns:
+            Whether the user allowed the tool to run.
+        """
+        self._confirmation_future = asyncio.get_running_loop().create_future()
+        self._on_confirmation_needed(tool_name, description)
+        try:
+            return await self._confirmation_future
+        finally:
+            self._confirmation_future = None
 
     async def handle_chunk(self, chunk: np.ndarray) -> np.ndarray | None:
         """Feed one audio chunk through the wake word / VAD state machine.
@@ -237,11 +284,8 @@ class Pipeline:
 
                 messages.append(ChatMessage(role="assistant", content=result.content))
                 for call in result.tool_calls:
-                    tool = self._tools.get_tool(call.name)
-                    confirmed = tool is not None and tool.permission_tier == PermissionTier.SAFE
-                    tool_result = await self._tools.execute(
-                        call.name, call.arguments, confirmed=confirmed
-                    )
+                    tool_result = await self._execute_tool_call(call.name, call.arguments)
+                    self._on_tool_used(call.name, tool_result.success, tool_result.message)
                     messages.append(
                         ChatMessage(role="tool", content=tool_result.message, tool_name=call.name)
                     )
@@ -249,6 +293,34 @@ class Pipeline:
         except Exception:
             log.error("pipeline_llm_failed", exc_info=True)
             return _FALLBACK_REPLY
+
+    async def _execute_tool_call(self, name: str, arguments: dict[str, object]) -> ToolResult:
+        """Run one tool call, asking the UI to confirm first if its tier requires it.
+
+        SAFE-tier tools run immediately, exactly as before. CONFIRM-tier
+        tools pause here and wait for :meth:`respond_confirmation` — if
+        denied, the tool never actually runs, and the LLM is told so
+        directly instead of receiving the registry's generic "needs your
+        confirmation" message (which would read as if nothing had been
+        asked yet).
+
+        Args:
+            name: The tool's registered name.
+            arguments: Raw arguments from the LLM's tool call.
+
+        Returns:
+            The tool's result, or a result explaining a denial.
+        """
+        tool = self._tools.get_tool(name)
+        if tool is not None and tool.permission_tier == PermissionTier.CONFIRM:
+            allowed = await self._request_confirmation(name, tool.description)
+            if not allowed:
+                log.info("tool_denied_by_user", tool=name, arguments=arguments)
+                return ToolResult(success=False, message=f"The user did not approve running {name}.")
+            return await self._tools.execute(name, arguments, confirmed=True)
+
+        confirmed = tool is not None and tool.permission_tier == PermissionTier.SAFE
+        return await self._tools.execute(name, arguments, confirmed=confirmed)
 
     async def _synthesize_safely(self, text: str) -> np.ndarray:
         """Synthesize speech, logging and returning silence on failure.
