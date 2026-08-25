@@ -36,11 +36,17 @@ def _build_page() -> str:
     base directories in dev vs. a PyInstaller-frozen build. Inlining at load
     time keeps the source split into small, single-responsibility files
     while still shipping pywebview one self-contained document.
+
+    The placeholders are wrapped in CSS/JS comment markers
+    (``/*{{STYLES}}*/``, ``//{{SCRIPT}}``) rather than bare, so the template
+    is valid (empty) CSS/JS on its own — editors and linters opening
+    chat.html directly no longer flag "selector expected" errors on a
+    placeholder that's about to be replaced anyway.
     """
     styles = "\n".join((_CSS_DIR / name).read_text(encoding="utf-8") for name in _CSS_FILES)
     script = _JS_PATH.read_text(encoding="utf-8")
     template = _HTML_PATH.read_text(encoding="utf-8")
-    return template.replace("{{STYLES}}", styles).replace("{{SCRIPT}}", script)
+    return template.replace("/*{{STYLES}}*/", styles).replace("//{{SCRIPT}}", script)
 
 
 class _ChatApi:
