@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import threading
 from collections.abc import Callable
+from pathlib import Path
 
 import pystray
 from PIL import Image, ImageDraw
@@ -23,15 +24,29 @@ log = get_logger(__name__)
 
 _ICON_SIZE = 64
 _ICON_COLOR = (37, 99, 235, 255)
+_ICON_PATH = Path(__file__).resolve().parent / "ui" / "icon.ico"
 
 
 def _build_icon_image() -> Image.Image:
-    """Draw a simple filled-circle placeholder icon for BT."""
-    image = Image.new("RGBA", (_ICON_SIZE, _ICON_SIZE), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(image)
-    margin = 4
-    draw.ellipse((margin, margin, _ICON_SIZE - margin, _ICON_SIZE - margin), fill=_ICON_COLOR)
-    return image
+    """Load BT's app icon for the tray.
+
+    Falls back to a plain filled circle if the icon file is missing for
+    some reason — the tray icon existing at all matters more than it
+    matching the app's branding exactly.
+    """
+    try:
+        return (
+            Image.open(_ICON_PATH)
+            .convert("RGBA")
+            .resize((_ICON_SIZE, _ICON_SIZE), Image.LANCZOS)
+        )
+    except (FileNotFoundError, OSError):
+        log.warning("tray_icon_file_missing_using_fallback", path=str(_ICON_PATH))
+        image = Image.new("RGBA", (_ICON_SIZE, _ICON_SIZE), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(image)
+        margin = 4
+        draw.ellipse((margin, margin, _ICON_SIZE - margin, _ICON_SIZE - margin), fill=_ICON_COLOR)
+        return image
 
 
 class TrayIcon:
