@@ -15,6 +15,7 @@ from bt_core.config import BTSettings
 from bt_core.logging_setup import get_logger
 from bt_core.tools.apps import OpenAppTool
 from bt_core.tools.base import PermissionTier, Tool, ToolResult
+from bt_core.tools.music import PlayMusicTool
 from bt_core.tools.system import GetTimeTool, SystemCommandTool
 from bt_core.tools.weather import GetWeatherTool
 from bt_core.tools.web import GoogleSearchTool, OpenWebsiteTool
@@ -84,7 +85,7 @@ def build_default_registry(settings: BTSettings) -> ToolRegistry:
 
     Returns:
         A ToolRegistry containing get_time, open_app, open_website,
-        google_search, system_command, and get_weather.
+        google_search, system_command, get_weather, and play_music.
     """
     timeout_s = settings.tools.timeout_s
     tools: list[Tool] = [
@@ -94,5 +95,6 @@ def build_default_registry(settings: BTSettings) -> ToolRegistry:
         GoogleSearchTool(timeout_s=timeout_s),
         SystemCommandTool(timeout_s=timeout_s),
         GetWeatherTool(timeout_s=timeout_s),
+        PlayMusicTool(timeout_s=timeout_s),
     ]
     return ToolRegistry(tools=tools)
