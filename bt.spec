@@ -20,7 +20,10 @@ section), matching how bt_core/config.py resolves paths for a frozen app.
 
 from PyInstaller.utils.hooks import collect_all, collect_data_files
 
-datas = [("bt_core/ui/chat.html", "bt_core/ui")]
+datas = [
+    ("bt_core/ui/chat.html", "bt_core/ui"),
+    ("bt_core/ui/icon.ico", "bt_core/ui"),
+]
 binaries = []
 hiddenimports = []
 
@@ -63,6 +66,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon="bt_core/ui/icon.ico",
 )
 coll = COLLECT(
     exe,

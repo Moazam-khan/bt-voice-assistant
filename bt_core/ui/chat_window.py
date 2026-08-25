@@ -21,6 +21,7 @@ from bt_core.logging_setup import get_logger
 log = get_logger(__name__)
 
 _HTML_PATH = Path(__file__).resolve().parent / "chat.html"
+_ICON_PATH = Path(__file__).resolve().parent / "icon.ico"
 
 
 class _ChatApi:
@@ -107,7 +108,7 @@ class ChatWindow:
                 receive JS calls — the natural place to start background
                 work (e.g. the pipeline's asyncio loop on another thread).
         """
-        webview.start(on_ready)
+        webview.start(on_ready, icon=str(_ICON_PATH))
 
     def show_user_message(self, text: str) -> None:
         """Append a user message bubble to the transcript."""

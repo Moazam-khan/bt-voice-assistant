@@ -52,6 +52,7 @@
     pointer-events: none;
   }
   .app-header .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; letter-spacing: 0.03em; }
+  .brand-logo { flex-shrink: 0; filter: drop-shadow(0 0 4px rgba(37, 99, 235, 0.6)); }
   .header-clock { color: var(--muted); font-variant-numeric: tabular-nums; }
   .header-right { display: flex; align-items: center; gap: 16px; }
   .header-weather { display: flex; align-items: center; gap: 6px; color: var(--muted); }
@@ -667,7 +668,20 @@
 </head>
 <body>
   <header class="app-header">
-    <div class="brand"><div class="logo-dot"></div>BT</div>
+    <div class="brand">
+      <svg class="brand-logo" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+        <defs>
+          <radialGradient id="brandOrb" cx="35%" cy="30%" r="75%">
+            <stop offset="0%" stop-color="#dbeafe"></stop>
+            <stop offset="55%" stop-color="#2563eb"></stop>
+            <stop offset="100%" stop-color="#1a2040"></stop>
+          </radialGradient>
+        </defs>
+        <circle cx="12" cy="12" r="10" fill="url(#brandOrb)"></circle>
+        <ellipse cx="8.5" cy="8" rx="3" ry="1.6" fill="rgba(255,255,255,0.55)"></ellipse>
+      </svg>
+      BT
+    </div>
     <div class="header-clock" id="header-clock">&mdash;</div>
     <div class="header-right">
       <div class="header-weather" id="header-weather">
